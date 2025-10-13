@@ -38,7 +38,7 @@ class OrderService
             $subtotal += $lineTotal;
         }
 
-        // 2) Hitung total (tanpa pajak/ongkir dulu; bisa ditambah nanti)
+        // 2) Hitung total
         $total = $subtotal;
 
         // 3) Bentuk order
