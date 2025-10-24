@@ -17,9 +17,9 @@ export default function Dashboard() {
             <Head title="Dashboard" />
             <div className="relative w-full flex flex-col items-center">
                 {/* Notifikasi */}
-                <button className="absolute top-0 right-0 mt-2 mr-4 rounded-full border-2 border-[#bf1206] p-2">
+                <button className="absolute top-0 right-0 mt-2 mr-4 rounded-full border-2 border-[var(--primary)] p-2">
                     <svg
-                        className="text-[#bf1206]"
+                        className="text-[var(--primary)]"
                         width="24"
                         height="24"
                         fill="none"
@@ -37,7 +37,7 @@ export default function Dashboard() {
                         <input
                             type="text"
                             placeholder="Cari Item"
-                            className="w-full rounded-lg bg-[#bf1206] bg-opacity-90 text-white placeholder-white px-4 py-2 focus:outline-none"
+                            className="w-full rounded-lg bg-[var(--primary)] bg-opacity-90 text-[var(--primary-foreground)] placeholder-[var(--primary-foreground)] px-4 py-2 focus:outline-none"
                         />
                         <svg
                             className="absolute left-3 top-1/2 -translate-y-1/2 text-white opacity-80"
@@ -55,7 +55,7 @@ export default function Dashboard() {
                     {/* Saldo */}
                     <div className="flex items-center bg-white rounded-lg shadow px-4 py-2 w-full justify-center">
                         <svg
-                            className="text-[#bf1206] mr-2"
+                            className="text-[var(--primary)] mr-2"
                             width="20"
                             height="20"
                             fill="none"
@@ -66,7 +66,7 @@ export default function Dashboard() {
                             <rect x="2" y="7" width="20" height="14" rx="4" />
                             <path d="M16 3v4M8 3v4" />
                         </svg>
-                        <span className="font-medium text-[#bf1206]">Rp 45.000</span>
+                        <span className="font-medium text-[var(--primary)]">Rp 45.000</span>
                     </div>
                 </div>
             </div>

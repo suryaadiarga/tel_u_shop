@@ -14,10 +14,10 @@ export default function Welcome() {
                     rel="stylesheet"
                 />
             </Head>
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFDFC] p-6 text-[#1b1b18] dark:bg-[#0a0a0a]">
-                <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg flex flex-col items-center dark:bg-[#161615] dark:text-[#EDEDEC]">
-                    <h1 className="text-3xl font-bold mb-2 text-center">Koperasi Tel-U</h1>
-                    <p className="text-center text-[#706f6c] mb-6 dark:text-[#A1A09A]">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--background)] p-6 text-[var(--foreground)]">
+                <div className="w-full max-w-sm rounded-lg bg-[var(--card)] p-8 shadow-lg flex flex-col items-center">
+                    <h1 className="text-3xl font-bold mb-2 text-center text-[var(--sidebar-primary)]">Koperasi Tel-U</h1>
+                    <p className="text-center text-[var(--muted-foreground)] mb-6">
                         Selamat datang di Koperasi Tel-U, anda bisa membeli apa yang anda cari disini.
                     </p>
                 </div>
@@ -25,7 +25,7 @@ export default function Welcome() {
                     {auth.user ? (
                         <Link
                             href={dashboard()}
-                            className="w-full rounded-md bg-[#bf1206] px-5 py-2 text-white text-center font-medium hover:bg-[#a00e05] dark:bg-[#EDEDEC] dark:text-[#1C1C1A] dark:hover:bg-[#d6d6d6]"
+                            className="w-full rounded-md bg-[var(--primary)] px-5 py-2 text-[var(--primary-foreground)] text-center font-medium hover:brightness-80"
                         >
                             Dashboard
                         </Link>
@@ -33,13 +33,13 @@ export default function Welcome() {
                         <>
                             <Link
                                 href={login()}
-                                className="w-full rounded-md bg-[#bf1206] px-5 py-2 text-white text-center font-medium hover:bg-[#a00e05] dark:bg-[#EDEDEC] dark:text-[#1C1C1A] dark:hover:bg-[#d6d6d6]"
+                                className="w-full rounded-md bg-[var(--primary)] px-5 py-2 text-[var(--primary-foreground)] text-center font-medium hover:brightness-80"
                             >
                                 Login
                             </Link>
                             <Link
                                 href={register()}
-                                className="w-full rounded-md border border-[#bf1206] px-5 py-2 text-[#bf1206] text-center font-medium hover:bg-[#f5f5f5] dark:border-[#EDEDEC] dark:text-[#EDEDEC] dark:hover:bg-[#232323]"
+                                className="w-full rounded-md border border-[var(--destructive)] px-5 py-2 text-[var(--destructive)] text-center font-medium hover:bg-[var(--hover-bg)]"
                             >
                                 Register
                             </Link>

@@ -3,7 +3,7 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
+// Appearance (light/dark) support removed. Theme is controlled via CSS variables in app.css.
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -24,5 +24,4 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on load...
-initializeTheme();
+// Dark-mode initialization removed — theming is handled by CSS variables.

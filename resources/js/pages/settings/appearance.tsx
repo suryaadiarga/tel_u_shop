@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 
+// Appearance settings removed. Kept placeholder page to avoid breaking routes.
 import AppearanceTabs from '@/components/appearance-tabs';
 import HeadingSmall from '@/components/heading-small';
 import { type BreadcrumbItem } from '@/types';
@@ -24,9 +25,11 @@ export default function Appearance() {
                 <div className="space-y-6">
                     <HeadingSmall
                         title="Appearance settings"
-                        description="Update your account's appearance settings"
+                        description="Appearance settings have been removed; the application uses a single light theme."
                     />
-                    <AppearanceTabs />
+                    <div className="text-sm text-neutral-600">
+                        The appearance controls have been disabled. The app uses the site-wide theme.
+                    </div>
                 </div>
             </SettingsLayout>
         </AppLayout>
