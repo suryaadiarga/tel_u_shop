@@ -33,18 +33,21 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="identifier">Nama atau Email</Label>
                                 <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
+                                    id="identifier"
+                                    type="text"
+                                    name="identifier"
                                     required
                                     autoFocus
                                     tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
+                                    autoComplete="username"
+                                    placeholder="Nama atau Email"
+                                    className="placeholder-[var(--muted-foreground)]"
+                                    aria-invalid={errors.identifier ? true : undefined}
+                                    aria-describedby={errors.identifier ? 'error-identifier' : undefined}
                                 />
-                                <InputError message={errors.email} />
+                                <InputError id="error-identifier" message={errors.identifier} />
                             </div>
 
                             <div className="grid gap-2">
@@ -53,10 +56,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="ml-auto text-sm"
+                                            className="ml-auto text-sm text-[var(--primary)]"
                                             tabIndex={5}
-                                        >
-                                            Forgot password?
+                                        >Forgot password?
                                         </TextLink>
                                     )}
                                 </div>
@@ -67,9 +69,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder="Masukkan Password"
+                                    aria-invalid={errors.password ? true : undefined}
+                                    aria-describedby={errors.password ? 'error-password' : undefined}
                                 />
-                                <InputError message={errors.password} />
+                                <InputError id="error-password" message={errors.password} />
                             </div>
 
                             <div className="flex items-center space-x-3">
@@ -83,13 +87,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-4 w-full bg-[var(--primary)] text-[var(--primary-foreground)]"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
                             >
                                 {processing && (
-                                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                                    <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
                                 )}
                                 Log in
                             </Button>

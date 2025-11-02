@@ -16,6 +16,9 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <!-- <link rel="AyamGeprek" href="/images/AyamGeprek.png" type="image/png"> -->
+
+        <!-- <img src='app.blade.php()."/../resource/view/images/AyamGeprek.png"' alt="gambar"> -->
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -23,8 +26,12 @@
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead
-    </head>
+    </head>    
+
     <body class="font-sans antialiased">
+        <!-- <header class="p-4">
+            <img src="{{ asset('images/AyamGeprek.png') }}" alt="Ayam Geprek" class="h-12 w-auto" />
+        </header> -->
         @inertia
     </body>
 </html>

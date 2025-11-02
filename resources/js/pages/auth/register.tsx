@@ -27,7 +27,7 @@ export default function Register() {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">Nama</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -36,16 +36,13 @@ export default function Register() {
                                     tabIndex={1}
                                     autoComplete="name"
                                     name="name"
-                                    placeholder="Full name"
-                                />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
+                                    placeholder="Masukkan Nama"
+                                    />
+                                <InputError message={errors.name} className="mt-2"/>
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Alamat Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -54,7 +51,7 @@ export default function Register() {
                                     autoComplete="email"
                                     name="email"
                                     placeholder="email@example.com"
-                                />
+                                    />
                                 <InputError message={errors.email} />
                             </div>
 
@@ -67,15 +64,13 @@ export default function Register() {
                                     tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
-                                    placeholder="Password"
-                                />
+                                    placeholder="Masukkan Password"
+                                    />
                                 <InputError message={errors.password} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
+                                <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
@@ -83,11 +78,8 @@ export default function Register() {
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
-                                    placeholder="Confirm password"
-                                />
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
+                                    placeholder="Masukkan Password"/>
+                                <InputError message={errors.password_confirmation} />
                             </div>
 
                             <Button
@@ -96,10 +88,8 @@ export default function Register() {
                                 tabIndex={5}
                                 data-test="register-user-button"
                             >
-                                {processing && (
-                                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                                )}
-                                Create account
+                                {processing && (<LoaderCircle className="h-4 w-4 animate-spin" />)}
+                                Buat akun
                             </Button>
                         </div>
 
