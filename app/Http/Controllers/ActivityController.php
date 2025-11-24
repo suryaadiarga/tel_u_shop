@@ -8,7 +8,8 @@ class ActivityController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('items')->latest()->get();
-        return view('activity.index', compact('orders'));
+        $orders = auth()->user()->orders()->latest()->get();
+        return view('activity', compact('orders'));
     }
+
 }

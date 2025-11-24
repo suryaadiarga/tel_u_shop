@@ -1,11 +1,115 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* --- Base --- */
+html,
+body {
+    @apply bg-[#F7F7F7] text-gray-900;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* --- Card & List --- */
+.ui-card {
+    @apply bg-white rounded-2xl shadow-soft p-4;
+}
+
+.ui-chip {
+    @apply px-3 py-1 rounded-full bg-white text-gray-700 text-sm shadow;
+}
+
+/* --- Header --- */
+.app-header {
+    @apply sticky top-0 z-30 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
+}
+
+.header-title {
+    @apply text-2xl font-bold tracking-tight;
+}
+
+.header-back {
+    @apply w-10 h-10 grid place-items-center rounded-full bg-brand-400 text-white;
+}
+
+/* --- Bottom Nav --- */
+.bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 z-40;
+}
+
+.bottom-nav-inner {
+    @apply mx-auto max-w-md bg-white/95 backdrop-blur border-t border-neutral-200;
+}
+
+.bottom-nav ul {
+    @apply grid grid-cols-5;
+}
+
+.bottom-nav a {
+    @apply flex flex-col items-center gap-1 py-3 text-xs text-gray-400;
+}
+
+.bottom-nav a.is-active {
+    @apply text-brand-500 font-semibold;
+}
+
+/* --- FAB (Scan) --- */
+.fab {
+    @apply fixed z-50 grid place-items-center rounded-full bg-brand-600 text-white shadow-xl;
+    width: 72px;
+    height: 72px;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.fab svg {
+    width: 30px;
+    height: 30px;
+}
+
+/* --- Image cards --- */
+.product-card {
+    @apply bg-white rounded-2xl shadow-soft overflow-hidden;
+}
+
+.product-card img {
+    @apply w-full aspect-[4/3] object-cover;
+}
+
+.product-card .body {
+    @apply p-4;
+}
+
+.product-title {
+    @apply text-lg font-semibold leading-snug;
+}
+
+.product-price {
+    @apply mt-1 font-bold;
+}
+
+/* --- Utilities --- */
+.scroll-page {
+    @apply pb-[110px] safe-bottom;
+}
+
+/* room for nav + fab */
+.btn {
+    @apply inline-flex items-center justify-center px-5 py-3 rounded-full font-semibold;
+}
+
+.btn-primary {
+    @apply bg-brand-600 text-white;
+}
+
+.btn-light {
+    @apply bg-white text-gray-800 shadow;
+}
+
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700;
 }

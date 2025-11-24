@@ -13,17 +13,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'username',
         'nim',
         'kelas',
-        'phone',
         'avatar_url',
         'ewallet_balance',
     ];
-
     protected $hidden = ['password', 'remember_token'];
 
     public function walletTransactions()
     {
         return $this->hasMany(WalletTransaction::class);
+    }
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
     }
 }

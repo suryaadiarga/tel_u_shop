@@ -1,10 +1,9 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'price', 'image_url', 'rating', 'reviews_count', 'category'];
+    protected $fillable = ['name', 'description', 'price', 'image_url', 'rating', 'reviews_count', 'category'];
 }

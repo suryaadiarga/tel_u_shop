@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('order_items', function (Blueprint $t) {
-            $t->id();
-            $t->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $t->string('product_name');
-            $t->integer('qty')->default(1);
-            $t->integer('price');
-            $t->string('thumb')->nullable();
-            $t->timestamps();
+        Schema::create('order_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->unsignedInteger('price'); // snapshot harga
+            $table->unsignedInteger('qty');
+            $table->unsignedInteger('subtotal');
+            $table->timestamps();
         });
     }
     public function down(): void

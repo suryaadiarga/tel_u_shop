@@ -1,63 +1,72 @@
 @extends('layouts.app')
+
 @section('content')
-    @include('components.topbar', ['title' => 'Daftar'])
+    <div class="page">
+        <div class="app-title">Tel-U Shop</div>
 
-    <div class="max-w-md mx-auto px-5 -mt-10">
-        <div
-            class="rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-soft p-6">
-            <form method="POST" action="{{ route('register.store') }}" class="grid grid-cols-1 gap-4">
-                @csrf
-                <div>
-                    <label class="text-sm font-medium">Nama</label>
-                    <input name="name" required class="mt-1 input" />
-                </div>
-                <div>
-                    <label class="text-sm font-medium">Email</label>
-                    <input type="email" name="email" required class="mt-1 input" />
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">Password</label>
-                        <input type="password" name="password" value="password" required class="mt-1 input" />
+        <div class="page-content">
+            <div class="auth-wrap">
+                <div class="auth-card">
+                    <div class="auth-head">
+                        <span class="pill">Daftar</span>
                     </div>
-                    <div>
-                        <label class="text-sm font-medium">Konfirmasi</label>
-                        <input type="password" name="password_confirmation" value="password" required class="mt-1 input" />
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">NIM</label>
-                        <input name="nim" class="mt-1 input" />
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">Kelas</label>
-                        <input name="kelas" class="mt-1 input" />
-                    </div>
-                </div>
+                    <h1 class="auth-title">Buat Akun</h1>
+                    <p class="auth-sub">Isi data singkat di bawah ini.</p>
 
-                <button
-                    class="mt-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 shadow-soft transition">Buat
-                    Akun</button>
-            </form>
+                    @include('components.alert')
+
+                    <form method="POST" action="{{ route('register.store') }}" novalidate>
+                        @csrf
+                        <div class="inline">
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="name">Nama</label>
+                                <input class="input" id="name" type="text" name="name" value="{{ old('name') }}" required>
+                                @error('name') <small class="help-link">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="email">Email</label>
+                                <input class="input" id="email" type="email" name="email" value="{{ old('email') }}"
+                                    required>
+                                @error('email') <small class="help-link">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+
+                        <div class="inline">
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="password">Password</label>
+                                <input class="input" id="password" type="password" name="password" required>
+                                @error('password') <small class="help-link">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="password_confirmation">Konfirmasi</label>
+                                <input class="input" id="password_confirmation" type="password" name="password_confirmation"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="inline">
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="nim">NIM (opsional)</label>
+                                <input class="input" id="nim" type="text" name="nim" value="{{ old('nim') }}">
+                            </div>
+                            <div class="form-row" style="flex:1">
+                                <label class="label" for="kelas">Kelas (opsional)</label>
+                                <input class="input" id="kelas" type="text" name="kelas" value="{{ old('kelas') }}">
+                            </div>
+                        </div>
+
+                        <button class="btn" type="submit">Buat Akun</button>
+
+                        <div class="auth-foot">
+                            <span>Sudah punya akun?</span>
+                            <a class="help-link" href="{{ route('login') }}">Masuk</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
+
+        @include('partials.fab-scan')
+        @include('partials.bottom-nav')
     </div>
-
-    @push('styles')
-        <style>
-            .input {
-                width: 100%;
-                border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                background: #fff;
-                padding: .75rem 1rem;
-                outline: none
-            }
-
-            .dark .input {
-                border-color: #262626;
-                background: #0a0a0a
-            }
-        </style>
-    @endpush
 @endsection

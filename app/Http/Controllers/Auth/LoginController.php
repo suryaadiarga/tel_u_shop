@@ -17,14 +17,14 @@ class LoginController extends Controller
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required'],
         ]);
 
         $remember = (bool) $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('home'))->with('toast', 'Selamat datang kembali!');
+            return redirect()->intended(route('home'));
         }
 
         return back()->withErrors([
@@ -37,6 +37,6 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login')->with('toast', 'Anda telah keluar.');
+        return redirect()->route('login');
     }
 }

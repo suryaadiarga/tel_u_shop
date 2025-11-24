@@ -1,123 +1,138 @@
-<!doctype html>
-<html x-data="{ dark: localStorage.theme === 'dark' }" x-bind:class="dark ? 'dark' : ''" lang="id">
+<!DOCTYPE html>
+<html lang="id">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Tel-U Shop' }}</title>
 
-    {{-- Tailwind CDN (tanpa Vite) --}}
+    <title>@yield('title', trim($__env->yieldContent('page.title', 'Tel-U Shop')))</title>
+
+    {{-- Tailwind CDN (opsional, karena util bawaan di app.css juga ada) --}}
     <script src="https://cdn.tailwindcss.com"></script>
+
+    {{-- Theme boot awal agar tidak ada flicker (FOUC) --}}
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { 50: '#fff1f1', 100: '#ffd7d7', 200: '#ffb3b3', 300: '#ff8a8a', 400: '#f25c5c', 500: '#c1121f', 600: '#9b1111', 700: '#7c0e0e', 800: '#5f0b0b', 900: '#420808' },
-                    },
-                    boxShadow: {
-                        soft: '0 10px 30px rgba(0,0,0,.12)',
-                        glass: '0 8px 30px rgba(0,0,0,.18)',
-                    }
-                }
-            }
-        }
+        try {
+            const key = 'telu:theme';
+            const saved = localStorage.getItem(key);
+            const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) { }
     </script>
 
-    {{-- Alpine.js untuk interaksi ringan --}}
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    {{-- Google Font (Inter) --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        html,
-        body {
-            font-family: Inter, ui-sans-serif, system-ui, Arial
-        }
-
-        .bg-hero {
-            background: radial-gradient(120% 120% at 50% -10%, rgba(193, 18, 31, .9) 0%, rgba(155, 17, 17, .95) 55%, rgba(155, 17, 17, 0) 56%), #fff;
-        }
-
-        .curve-mask {
-            mask: radial-gradient(140% 100% at 50% 0, #000 0 65%, transparent 66% 100%);
-        }
-
-        .glass {
-            backdrop-filter: blur(10px);
-        }
-    </style>
-
-    @stack('styles')
+    {{-- CSS utama --}}
+    <link rel="stylesheet" href="{{ asset('app.css') }}?v=20251102">
 </head>
 
-<body class="bg-white dark:bg-neutral-950 dark:text-neutral-100">
+<body class="min-h-dvh">
+    {{-- Header --}}
+    <header class="app-header">
+        <div class="mx-auto max-w-md px-4 py-3 flex items-center gap-3 w-full">
+            @hasSection('page.back')
+                <a href="@yield('page.back')" class="header-back" aria-label="Back" data-ripple>
+                    {{-- Left arrow --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd"
+                            d="M15.78 3.97a.75.75 0 010 1.06L9.81 11l5.97 5.97a.75.75 0 11-1.06 1.06l-6.5-6.5a.75.75 0 010-1.06l6.5-6.5a.75.75 0 011.06 0z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </a>
+            @else
+                <div class="w-10"></div>
+            @endif
 
-    {{-- Top gradient halo --}}
-    <div class="fixed inset-x-0 -top-24 h-64 blur-3xl opacity-30 dark:opacity-50 pointer-events-none"
-        style="background: radial-gradient(600px 200px at 50% 40%, #c1121f55, transparent 70%);"></div>
+            <h1 class="header-title flex-1">@yield('page.title', 'Tel-U Shop')</h1>
 
-    <main class="min-h-[100dvh] pb-24">
+            {{-- Toggle Light/Dark --}}
+            <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme" data-ripple>
+                <span class="i">🌞</span>
+                <span class="label">Light</span>
+            </button>
+        </div>
+    </header>
+
+    {{-- Page content --}}
+    <main class="mx-auto max-w-md px-4 pt-4 scroll-page page-content">
         @yield('content')
     </main>
 
-    {{-- Bottom Nav (glass) --}}
-    <nav class="fixed bottom-3 inset-x-3 z-50">
-        <div
-            class="glass shadow-glass rounded-2xl px-4 py-2 bg-white/80 dark:bg-neutral-900/70 backdrop-saturate-150 border border-white/40 dark:border-white/10">
-            <ul class="flex items-center justify-between text-sm">
-                <li><a href="{{ route('home') }}"
-                        class="px-3 py-2 rounded-xl {{ request()->routeIs('home') ? 'bg-brand-600 text-white' : 'text-neutral-600 dark:text-neutral-300' }}">Home</a>
-                </li>
-                <li><a href="{{ route('cart') }}"
-                        class="px-3 py-2 rounded-xl {{ request()->routeIs('cart') ? 'bg-brand-600 text-white' : 'text-neutral-600 dark:text-neutral-300' }}">Cart</a>
-                </li>
+    {{-- FAB Scan (tengah) --}}
+    <button class="fab" data-fab-scan data-to="{{ route('qr') }}" aria-label="ScanPay" data-ripple>
+        {{-- QR icon --}}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 8V6a2 2 0 012-2h2M20 8V6a2 2 0 00-2-2h-2M4 16v2a2 2 0 002 2h2M20 16v2a2 2 0 01-2 2h-2M7 7h3v3H7V7zm7 0h3v3h-3V7zm-7 7h3v3H7v-3zm7 0h3v3h-3v-3z" />
+        </svg>
+    </button>
+
+    {{-- Bottom Nav --}}
+    <nav class="bottom-nav safe-bottom">
+        <div class="bottom-nav-inner">
+            <ul class="mx-auto max-w-md">
                 <li>
-                    <a href="{{ route('qr') }}"
-                        class="inline-flex items-center justify-center w-12 h-12 -mt-8 rounded-full bg-brand-600 text-white shadow-soft hover:scale-105 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none"
+                    <a data-nav-link href="{{ route('home') }}">
+                        {{-- home --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
-                            <path stroke-width="2"
-                                d="M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zm12 4h2v-2h2v4h-4v-2zM15 13h4v2h-4v-2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 12l9-7 9 7v8a2 2 0 01-2 2h-4a2 2 0 01-2-2V13H9v7a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                         </svg>
+                        <span>Home</span>
                     </a>
                 </li>
-                <li><a href="{{ route('activity') }}"
-                        class="px-3 py-2 rounded-xl {{ request()->routeIs('activity') ? 'bg-brand-600 text-white' : 'text-neutral-600 dark:text-neutral-300' }}">Activity</a>
+                <li>
+                    <a data-nav-link href="{{ route('cart') }}">
+                        {{-- cart --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l3-7H6.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M10 21h4" />
+                        </svg>
+                        <span>Cart</span>
+                    </a>
                 </li>
-                <li class="flex items-center gap-2">
-                    <a href="{{ route('profile') }}"
-                        class="px-3 py-2 rounded-xl {{ request()->routeIs('profile') ? 'bg-brand-600 text-white' : 'text-neutral-600 dark:text-neutral-300' }}">Profile</a>
-                    {{-- Dark mode toggle --}}
-                    <button class="ml-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10"
-                        x-on:click="dark=!dark; dark?localStorage.theme='dark':localStorage.removeItem('theme')"
-                        title="Toggle theme">
-                        <svg x-show="!dark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-neutral-600"
-                            viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 18a6 6 0 1 1 0-12v12Z" />
+                <li>
+                    <a data-nav-link href="{{ route('qr') }}">
+                        {{-- scanpay --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M3 7V5a2 2 0 012-2h2v2H5v2H3zm12-4h2a2 2 0 012 2v2h-2V5h-2V3zM3 17h2v2h2v2H5a2 2 0 01-2-2v-2zm16 0h2v2a2 2 0 01-2 2h-2v-2h2v-2z" />
+                            <path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z" />
                         </svg>
-                        <svg x-show="dark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-300"
-                            viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.657 16.243A8 8 0 0 1 7.757 6.343 8 8 0 1 0 17.657 16.243Z" />
+                        <span>ScanPay</span>
+                    </a>
+                </li>
+                <li>
+                    <a data-nav-link href="{{ route('activity') }}">
+                        {{-- activity --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                    </button>
+                        <span>Activity</span>
+                    </a>
+                </li>
+                <li>
+                    <a data-nav-link href="{{ route('profile') }}">
+                        {{-- profile --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Profile</span>
+                    </a>
                 </li>
             </ul>
         </div>
     </nav>
 
-    @if(session('toast'))
-        <div x-data="{show:true}" x-show="show" x-init="setTimeout(()=>show=false,3000)"
-            class="fixed top-4 inset-x-0 flex justify-center z-[60]">
-            <div class="px-4 py-2 rounded-xl bg-emerald-600 text-white shadow-soft">{{ session('toast') }}</div>
-        </div>
-    @endif
-
-
+    @stack('modals')
     @stack('scripts')
+
+    {{-- JS utama (sudah ada handler theme toggle, ripple, anti double submit, dll.) --}}
+    <script src="{{ asset('app.js') }}?v=20251102" defer></script>
 </body>
 
 </html>

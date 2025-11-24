@@ -5,14 +5,20 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void {
-        Schema::create('orders', function (Blueprint $t) {
-            $t->id();
-            $t->string('status')->default('Selesai');
-            $t->integer('total')->default(0);
-            $t->timestamp('placed_at')->nullable();
-            $t->timestamps();
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('total_amount');
+            $table->enum('payment_method',['cash','ewallet']);
+            $table->enum('status',['pending','paid','cancelled'])->default('paid'); // kita langsung paid saat sukses
+            $table->timestamps();
         });
     }
-    public function down(): void { Schema::dropIfExists('orders'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('orders');
+    }
 };

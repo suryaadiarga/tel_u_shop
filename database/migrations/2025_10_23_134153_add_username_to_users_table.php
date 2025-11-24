@@ -8,14 +8,19 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->unique()->after('name');
+            // Tambah kolom hanya kalau belum ada
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username')->after('name');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('username');
+            if (Schema::hasColumn('users', 'username')) {
+                $table->dropColumn('username');
+            }
         });
     }
 };
