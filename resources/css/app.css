@@ -95,7 +95,19 @@
     --sidebar-accent-foreground: #1f2937;
     --sidebar-border: #e5e7eb;
     --sidebar-ring: #e5e7eb;
-    --hover-bg: rgba(0,0,0,0.22);
+    .hover-redbg-1 {
+        background-color: #A11119;
+    }
+    .hover\:hover-redbg-2:hover {
+        background-color: #cb1f1f;
+    }
+
+    /* .hover-whitebg-1 {
+        background-color: #ffffff;
+    }
+    .hover\:hover-redbg-2:hover {
+        background-color: #9a9a9a;
+    } */
 }
 
 /* dark mode variables removed - theme uses only :root */

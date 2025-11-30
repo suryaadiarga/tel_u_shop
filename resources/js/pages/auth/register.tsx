@@ -12,19 +12,28 @@ import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
     return (
-        <AuthLayout
-            title="Create an account"
-            description="Enter your details below to create your account"
+        <div
+            style={{
+                backgroundImage: "url('/images/welcome/redwhitebg.jpg')",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'bottom center',
+                backgroundSize: 'cover',
+            }}
+            className="flex min-h-screen items-center justify-center p-6 text-[var(--foreground)]"
         >
-            <Head title="Register" />
-            <Form
+            <AuthLayout
+                title="Create an account"
+                description="Masukkan detail Anda di bawah ini untuk membuat akun Anda."
+            >
+                <Head title="Register" />
+                <Form
                 {...RegisteredUserController.store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
                 className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
-                    <>
+                >
+                    {({ processing, errors }) => (
+                        <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Nama</Label>
@@ -84,10 +93,10 @@ export default function Register() {
 
                             <Button
                                 type="submit"
-                                className="mt-2 w-full"
+                                className="mt-4 w-full text-[var(--primary-foreground)] hover-redbg-1 hover:hover-redbg-2"
                                 tabIndex={5}
                                 data-test="register-user-button"
-                            >
+                                >
                                 {processing && (<LoaderCircle className="h-4 w-4 animate-spin" />)}
                                 Buat akun
                             </Button>
@@ -99,9 +108,10 @@ export default function Register() {
                                 Log in
                             </TextLink>
                         </div>
-                    </>
+                        </>
                 )}
-            </Form>
-        </AuthLayout>
+                </Form>
+                </AuthLayout>
+        </div>
     );
 }

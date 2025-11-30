@@ -26,9 +26,9 @@ const categories = [
 ];
 
 const flashSale = [
-    { id: 1, name: 'Paket Data 10GB', price: 18000, cut: 25000, badge: '–28%' },
-    { id: 2, name: 'Ayam Geprek', price: 12000, cut: 17000, badge: '–29%' },
-    { id: 3, name: 'Es Kopi Susu', price: 9000, cut: 14000, badge: '–35%' },
+    { id: 1, name: 'Paket Data 10GB', price: 18000, cut: 25000, badge: '–28%', img: "/images/lainlain/paketdata10gb.jpg" },
+    { id: 2, name: 'Ayam Geprek', price: 12000, cut: 17000, badge: '–29%', img: "/images/makanan/AyamGeprek.jpg" },
+    { id: 3, name: 'Es Kopi Susu', price: 9000, cut: 14000, badge: '–35%', img: "/images/minuman/KopiSusu.jpg" },
     { id: 4, name: 'Pulsa 25k', price: 23000, cut: 25000, badge: '–8%' },
 ];
 
@@ -176,9 +176,18 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {flashSale.map(item => (
                         <div key={item.id} className="rounded-2xl bg-white shadow p-3 hover:shadow-md transition">
-                            <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 mb-2 relative overflow-hidden">
-                                <span className="absolute left-2 top-2 text-[11px] bg-[var(--primary)] text-[var(--primary-foreground)] rounded px-1.5 py-0.5">{item.badge}</span>
-                            </div>
+                                <div className="aspect-[4/3] rounded-xl mb-2 relative overflow-hidden bg-gray-100">
+                                {item.img ? (
+                                    <img src={item.img} alt={item.name} className="w-full h-full object-cover rounded-xl" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                                )}
+                                {item.badge && (
+                                    <span className="absolute left-2 top-2 text-[11px] bg-[var(--primary)] text-[var(--primary-foreground)] rounded px-1.5 py-0.5 z-10">
+                                    {item.badge}
+                                    </span>
+                                )}
+                                </div>
                             <p className="text-sm line-clamp-2">{item.name}</p>
                             <div className="mt-1 flex items-baseline gap-2">
                                 <p className="font-semibold text-[var(--primary)]">Rp {item.price.toLocaleString('id-ID')}</p>

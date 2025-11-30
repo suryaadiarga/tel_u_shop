@@ -18,17 +18,26 @@ interface LoginProps {
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     return (
-        <AuthLayout
-            title="Log in to your account"
-            description="Enter your email and password below to log in"
+        <div
+            style={{
+                backgroundImage: "url('/images/welcome/redwhitebg.jpg')",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'bottom center',
+                backgroundSize: 'cover',
+            }}
+                className="flex min-h-screen items-center justify-center p-6 text-[var(--foreground)]"
         >
-            <Head title="Log in" />
-
-            <Form
-                {...AuthenticatedSessionController.store.form()}
-                resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
+            <AuthLayout
+                title="Log in to your account"
+                description="Masukkan alamat email dan kata sandi Anda di bawah ini."
             >
+                <Head title="Log in" />
+
+                <Form
+                    {...AuthenticatedSessionController.store.form()}
+                    resetOnSuccess={['password']}
+                    className="flex flex-col gap-6"
+                >
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
@@ -87,7 +96,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full bg-[var(--primary)] text-[var(--primary-foreground)]"
+                                className="mt-4 w-full text-[var(--primary-foreground)] hover-redbg-1 hover:hover-redbg-2"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
@@ -107,13 +116,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         </div>
                     </>
                 )}
-            </Form>
+                </Form>
 
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
                     {status}
                 </div>
             )}
-        </AuthLayout>
+            </AuthLayout>
+        </div>
     );
 }
