@@ -1,11 +1,20 @@
 @extends('layouts.app')
+@section('page.title', 'Dashboard')
 
 @section('content')
-    <h1 style="margin:0 0 12px 0;">Dashboard</h1>
-    <p class="muted">Kamu berhasil login.</p>
+    <section class="max-w-md mx-auto space-y-4">
+        <div class="app-title">Dashboard</div>
 
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button class="btn">Logout</button>
-    </form>
+        <article class="rounded-2xl border p-4"
+            style="background:var(--clr-card);box-shadow:var(--shadow-card);border-color:var(--clr-line);">
+            <p class="mb-3" style="color:var(--clr-text-secondary);">
+                Kamu berhasil login ke Tel-U Shop.
+            </p>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="btn" type="submit" data-ripple>Logout</button>
+            </form>
+        </article>
+    </section>
 @endsection

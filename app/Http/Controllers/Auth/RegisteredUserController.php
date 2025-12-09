@@ -6,35 +6,40 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth; // <-- penting
 
 class RegisteredUserController extends Controller
 {
     public function create()
     {
-        return view('auth.register');
+        return response()->json([
+            'message' => 'Silakan isi data untuk registrasi.',
+            'fields'  => ['name', 'email', 'password', 'password_confirmation']
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', 'min:6'],
-            'nim' => ['nullable', 'string', 'max:50'],
-            'kelas' => ['nullable', 'string', 'max:50'],
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
+        // Rely on User model mutator to hash the password
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'nim' => $validated['nim'],
-            'kelas' => $validated['kelas'],
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'password' => $validated['password'],
+            'role_id'  => 3,
         ]);
 
-        Auth::login($user);
+        $token = $user->createToken('api_token')->plainTextToken;
 
-        return redirect()->route('home');
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Registrasi berhasil',
+            'user'    => $user,
+            'token'   => $token
+        ], 201);
     }
 }

@@ -9,7 +9,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('ewallet_balance')->default(0)->after('avatar_url');
+            if (!Schema::hasColumn('users', 'ewallet_balance')) {
+                $table->integer('ewallet_balance')->default(0)->after('avatar_url');
+            }
         });
     }
     public function down(): void

@@ -1,55 +1,58 @@
 @extends('layouts.app')
 
-@section('title', 'Kartu tanda mahasiswa')
+@section('page.title', 'Kartu tanda mahasiswa')
 
 @section('content')
-<div class="page">
-    <div class="app-title">Kartu tanda mahasiswa</div>
+@php($u = auth()->user())
 
-    <div class="page-content">
-        @php($u = auth()->user())
-        <div class="auth-card" style="max-width:720px">
-            <div style="display:flex; gap:20px; align-items:center; margin-bottom:14px">
-                <div style="width:84px;height:84px;border-radius:50%;overflow:hidden;background:#ddd;flex:none">
-                    {{-- foto user kalau ada --}}
-                    @if(!empty($u->avatar_url))
-                        <img src="{{ $u->avatar_url }}" alt="avatar" style="width:100%;height:100%;object-fit:cover">
-                    @endif
-                </div>
-                <div>
-                    <div style="font-weight:800;font-size:28px;line-height:1">{{ $u->name ?? 'User' }}</div>
-                    <div style="color:#cfd3d9">{{ $u->email }}</div>
-                </div>
-            </div>
+<section class="max-w-md mx-auto space-y-4">
+    <div class="app-title">Kartu Tanda Mahasiswa</div>
 
-            <div
-                style="background:#fff;border-radius:14px;padding:16px;color:#111; box-shadow:0 6px 18px rgba(0,0,0,.06)">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:6px">NIM</div>
-                        <div style="font-weight:700">{{ $u->nim ?? '-' }}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:6px">Kelas</div>
-                        <div style="font-weight:700">{{ $u->kelas ?? '-' }}</div>
-                    </div>
-                </div>
+    <article class="profile-card" style="margin-top:0;">
+        {{-- header merah cuma sedikit biar beda dengan halaman profil --}}
+        <div class="profile-header" style="height:80px;"></div>
 
-                {{-- QR sederhana/placeholder --}}
-                <div style="display:flex;justify-content:center;margin:22px 0">
-                    <div style="
-            width:180px;height:180px;border-radius:12px;background:
-            repeating-linear-gradient(45deg,#0f172a 0 8px,#e2e8f0 8px 16px);
-          " aria-label="QR placeholder"></div>
-                </div>
-
-                <button class="btn" type="button" onclick="location.href='{{ route('qr') }}'">
-                    Go to link
-                </button>
-            </div>
+        <div class="profile-avatar">
+            @if (!empty($u->avatar_url))
+                <img src="{{ $u->avatar_url }}" alt="Avatar">
+            @else
+                <img src="/images/avatar-default.png" alt="Avatar">
+            @endif
         </div>
-    </div>
 
-    @include('partials.bottom-nav')
-</div>
+        <div class="profile-info">
+            <h2>{{ $u->name ?? 'User' }}</h2>
+            <p class="email">{{ $u->email }}</p>
+
+            <div class="profile-field">
+                <span class="icon">🆔</span>
+                <div>
+                    <label>NIM</label>
+                    <p>{{ $u->nim ?? '-' }}</p>
+                </div>
+            </div>
+
+            <div class="profile-field">
+                <span class="icon">🏫</span>
+                <div>
+                    <label>Kelas</label>
+                    <p>{{ $u->kelas ?? '-' }}</p>
+                </div>
+            </div>
+
+            {{-- QR placeholder kartu --}}
+            <div class="mt-4 flex justify-center">
+                <div aria-label="QR Kartu Mahasiswa" style="
+                        width:180px;height:180px;border-radius:14px;
+                        background:
+                            repeating-linear-gradient(45deg,#0f172a 0 8px,#e2e8f0 8px 16px);
+                    "></div>
+            </div>
+
+            <button class="btn mt-5" type="button" onclick="location.href='{{ route('qr') }}'" data-ripple>
+                Tampilkan QR Aktif
+            </button>
+        </div>
+    </article>
+</section>
 @endsection

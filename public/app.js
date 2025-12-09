@@ -1,6 +1,13 @@
 // =======================================================
 // Tel-U Shop Frontend Script (no Vite, single JS)
-// Cocok dengan layouts.app + app.css yang kita pakai
+// Cocok dengan layouts.app + app.css
+// Fitur:
+// - Theme light/dark (sinkron dengan <script> di layout)
+// - Ripple effect
+// - Bottom-nav active state
+// - Anti double submit form
+// - FAB behavior
+// - Keyboard safe untuk mobile
 // =======================================================
 
 // --- Helper ---
@@ -14,6 +21,7 @@ const fadeIn = (el, dur = 300) => {
     el.style.transition = `opacity ${dur}ms ease`;
     requestAnimationFrame(() => (el.style.opacity = 1));
 };
+
 const fadeOut = (el, dur = 300) => {
     if (!el) return;
     el.style.transition = `opacity ${dur}ms ease`;
@@ -23,6 +31,7 @@ const fadeOut = (el, dur = 300) => {
 
 // --- Ripple effect ---
 function attachRipple(el) {
+    if (!el) return;
     el.addEventListener('click', e => {
         const rect = el.getBoundingClientRect();
         const r = Math.max(rect.width, rect.height);
@@ -37,25 +46,39 @@ function attachRipple(el) {
 }
 
 // --- Theme (light/dark) ---
+// KEY harus sama dengan script boot di layouts/app.blade.php
 const THEME_KEY = 'telu-theme';
+
 function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme); // CSS pakai [data-theme]
+    document.documentElement.setAttribute('data-theme', theme);
 }
+
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+    try {
+        const saved = localStorage.getItem(THEME_KEY);
+        const prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+    } catch (e) {
+        applyTheme('light');
+    }
 }
+
 function toggleTheme() {
     const curr = document.documentElement.getAttribute('data-theme') || 'light';
     const next = curr === 'dark' ? 'light' : 'dark';
     applyTheme(next);
-    localStorage.setItem(THEME_KEY, next);
-    // sinkronkan toggle UI (jika ada)
+    try {
+        localStorage.setItem(THEME_KEY, next);
+    } catch (e) { }
+
+    // sync toggle UI
     const toggles = $$('[data-theme-toggle]');
     toggles.forEach(t => {
-        if ('checked' in t) t.checked = (next === 'dark');
-        if (t.dataset.themeLabel) t.textContent = next === 'dark' ? 'Light' : 'Dark';
+        if ('checked' in t) t.checked = next === 'dark';
+        if (t.dataset.themeLabel) {
+            t.textContent = next === 'dark' ? '☀️' : '🌙';
+        }
     });
 }
 
@@ -63,7 +86,8 @@ function toggleTheme() {
 function setActiveNav() {
     const here = window.location.pathname.replace(/\/+$/, '') || '/';
     $$('a[data-nav-link]').forEach(a => {
-        const path = new URL(a.href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+        const path = new URL(a.href, window.location.origin)
+            .pathname.replace(/\/+$/, '') || '/';
         a.classList.toggle('active', path === here);
     });
 }
@@ -72,11 +96,14 @@ function setActiveNav() {
 function setupKeyboardSafe() {
     const onResize = () => {
         const vp = window.visualViewport;
-        const keyboardOpen = vp ? (vp.height < window.innerHeight - 80) : (window.innerHeight < 500);
+        const keyboardOpen = vp
+            ? vp.height < window.innerHeight - 80
+            : window.innerHeight < 500;
         document.body.classList.toggle('keyboard-open', keyboardOpen);
     };
+
     if (window.visualViewport) {
-        visualViewport.addEventListener('resize', onResize);
+        window.visualViewport.addEventListener('resize', onResize);
     } else {
         window.addEventListener('resize', onResize);
     }
@@ -95,6 +122,7 @@ function enhanceForms() {
                 if (b.tagName === 'INPUT') b.value = 'Processing…';
                 b.classList.add('btn-loading');
             });
+
             // fallback restore jika halaman tidak pindah
             setTimeout(() => {
                 submitters.forEach(b => {
@@ -105,6 +133,7 @@ function enhanceForms() {
                     b.classList.remove('btn-loading');
                 });
             }, 8000);
+
             // blur keyboard
             const active = document.activeElement;
             if (active && typeof active.blur === 'function') active.blur();
@@ -116,24 +145,36 @@ function enhanceForms() {
 function enhanceFab() {
     const fab = $('.fab');
     if (!fab) return;
+
     attachRipple(fab);
+
     fab.addEventListener('click', () => {
-        fab.animate([{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' });
+        fab.animate(
+            [
+                { transform: 'scale(1)' },
+                { transform: 'scale(.92)' },
+                { transform: 'scale(1)' },
+            ],
+            { duration: 220, easing: 'ease-out' }
+        );
+
         const to = fab.dataset.to || fab.getAttribute('data-to') || fab.dataset.fabScan || '';
-        if (to) window.location.assign(to);
+        if (to) {
+            window.location.assign(to);
+        }
     });
 }
 
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ Tel-U Shop UI loaded');
+    console.log('✅ Tel-U Shop UI loaded (app.js)');
 
     // Theme init + toggle
     initTheme();
     $$('[data-theme-toggle]').forEach(t => {
-        // support button/checkbox
+        // support button / checkbox
         if (t.type === 'checkbox') {
-            t.checked = (document.documentElement.getAttribute('data-theme') === 'dark');
+            t.checked = document.documentElement.getAttribute('data-theme') === 'dark';
             t.addEventListener('change', toggleTheme);
         } else {
             t.addEventListener('click', toggleTheme);
@@ -144,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ripple untuk elemen bertanda
     $$('[data-ripple]').forEach(attachRipple);
 
-    // Flash auto-hide
+    // Flash auto-hide (kalau pakai .alert[data-autohide])
     $$('.alert[data-autohide]').forEach(el => {
         const ms = parseInt(el.dataset.autohide, 10) || 3500;
         setTimeout(() => fadeOut(el, 400), ms);
@@ -152,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bottom nav active
     setActiveNav();
-    // animasi klik + ripple
     $$('a[data-nav-link]').forEach(a => {
         attachRipple(a);
         a.addEventListener('click', () => {
@@ -171,5 +211,5 @@ document.addEventListener('DOMContentLoaded', () => {
     setupKeyboardSafe();
 
     // Fade-in konten utama
-    fadeIn($('.page-content'), 300);
+    fadeIn($('.page-content'), 260);
 });

@@ -8,21 +8,33 @@ use Illuminate\Support\Facades\Password;
 
 class PasswordResetLinkController extends Controller
 {
-    // Tampilkan form "Lupa Password"
+    /**
+     * Endpoint untuk meminta reset password (opsional info).
+     */
     public function create()
     {
-        return view('auth.forgot-password');
+        return response()->json([
+            'message' => 'Silakan masukkan email untuk reset password.'
+        ]);
     }
 
-    // Kirim link reset ke email
+    /**
+     * Kirim link reset password ke email.
+     */
     public function store(Request $request)
     {
         $request->validate(['email' => 'required|email']);
 
         $status = Password::sendResetLink($request->only('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'message' => 'Link reset password sudah dikirim ke email.'
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Gagal mengirim link reset password.'
+        ], 400);
     }
 }

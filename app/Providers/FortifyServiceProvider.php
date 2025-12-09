@@ -16,7 +16,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bisa dipakai untuk binding custom service terkait auth
     }
 
     /**
@@ -24,11 +24,20 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
-        Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
+        // Custom view untuk 2FA challenge
+        Fortify::twoFactorChallengeView(fn() => Inertia::render('auth/two-factor-challenge'));
 
+        // Custom view untuk confirm password
+        Fortify::confirmPasswordView(fn() => Inertia::render('auth/confirm-password'));
+
+        // Rate limiter untuk 2FA
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
+        });
+
+        // Rate limiter untuk login umum
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->input('email') . $request->ip());
         });
     }
 }

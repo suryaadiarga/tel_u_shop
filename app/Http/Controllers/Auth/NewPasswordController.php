@@ -5,41 +5,48 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class NewPasswordController extends Controller
 {
-    // Form set password baru (dari link email)
-    public function create(string $token)
+    /**
+     * Endpoint untuk menampilkan token reset (opsional).
+     */
+    public function create($token)
     {
-        return view('auth.reset-password', [
-            'token' => $token,
-            'email' => request('email')
+        return response()->json([
+            'message' => 'Gunakan token ini untuk reset password.',
+            'token' => $token
         ]);
     }
 
-    // Proses update password
+    /**
+     * Proses reset password.
+     */
     public function store(Request $request)
     {
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) use ($request) {
+            function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($request->password),
-                    'remember_token' => Str::random(60),
+                    'password' => bcrypt($password),
                 ])->save();
             }
         );
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', __($status))
-            : back()->withErrors(['email' => [__($status)]]);
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => 'Password berhasil direset.'
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Gagal reset password.'
+        ], 400);
     }
 }

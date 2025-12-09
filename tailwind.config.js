@@ -12,7 +12,7 @@ export default {
                     100: '#ffd9d9',
                     200: '#ffb3b3',
                     300: '#ff8c8c',
-                    400: '#ef4444',   // merah aksen (deket Tel-U)
+                    400: '#ef4444',
                     500: '#b91c1c',
                     600: '#991b1b',
                 },

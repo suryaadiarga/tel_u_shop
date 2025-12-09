@@ -1,3 +1,3 @@
 <div class="fab">
-    <a href="{{ route('qr') }}" aria-label="Scan QR">▣</a>
+    <a href="{{ route('qr.scanner.page') }}" aria-label="Scan QR">▣</a>
 </div>

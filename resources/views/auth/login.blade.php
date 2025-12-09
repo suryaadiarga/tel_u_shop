@@ -51,8 +51,5 @@
                 </div>
             </div>
         </div>
-
-        @include('partials.fab-scan')
-        @include('partials.bottom-nav')
     </div>
 @endsection
