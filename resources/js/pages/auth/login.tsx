@@ -27,9 +27,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             }}
                 className="flex min-h-screen items-center justify-center p-6 text-[var(--foreground)]"
         >
-            <AuthLayout
+                <AuthLayout
                 title="Log in to your account"
-                description="Masukkan alamat email dan kata sandi Anda di bawah ini."
+                description="Masukkan NIM dan kata sandi Anda di bawah ini."
             >
                 <Head title="Log in" />
 
@@ -42,21 +42,21 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="identifier">Nama atau Email</Label>
+                                <Label htmlFor="login">Nama atau NIM</Label>
                                 <Input
-                                    id="identifier"
+                                    id="login"
                                     type="text"
-                                    name="identifier"
+                                    name="login"
                                     required
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="username"
-                                    placeholder="Nama atau Email"
+                                    placeholder="Masukkan Nama atau NIM"
                                     className="placeholder-[var(--muted-foreground)]"
-                                    aria-invalid={errors.identifier ? true : undefined}
-                                    aria-describedby={errors.identifier ? 'error-identifier' : undefined}
+                                    aria-invalid={errors.login ? true : undefined}
+                                    aria-describedby={errors.login ? 'error-login' : undefined}
                                 />
-                                <InputError id="error-identifier" message={errors.identifier} />
+                                <InputError id="error-login" message={errors.login} />
                             </div>
 
                             <div className="grid gap-2">

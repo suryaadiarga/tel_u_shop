@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Models\User;
+use App\Models\Mahasiswa;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class LoginRequest extends FormRequest
 {
@@ -27,8 +28,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // `identifier` accepts either email or name
-            'identifier' => ['required', 'string'],
+            // use `nim` as the credential for mahasiswa
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -38,31 +39,18 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentials(): User
+    public function validateCredentials(): Mahasiswa
     {
         $this->ensureIsNotRateLimited();
+        $nim = (string) $this->input('nim');
 
-        /** @var User|null $user */
-        $identifier = (string) $this->input('identifier');
+        $user = Mahasiswa::where('nim', $nim)->first();
 
-        $credentials = ['password' => $this->input('password')];
-
-        // Identifikasi berdasarkan nama atau email//
-        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-            // email untuk tabel users //
-            $credentials['email'] = $identifier;
-        } else {
-            // name untuk kolom tabel users //
-            $credentials['name'] = $identifier;
-        }
-
-        $user = Auth::getProvider()->retrieveByCredentials($credentials);
-
-        if (! $user || ! Auth::getProvider()->validateCredentials($user, ['password' => $this->input('password')])) {
+        if (! $user || ! Hash::check($this->input('password'), $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'identifier' => __('auth.failed'),
+                'nim' => __('auth.failed'),
             ]);
         }
 
@@ -99,10 +87,7 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return $this->string('identifier')
-            ->lower()
-            ->append('|'.$this->ip())
-            ->transliterate()
-            ->value();
+        $nim = (string) $this->input('nim');
+        return strtolower($nim).'|'.$this->ip();
     }
 }

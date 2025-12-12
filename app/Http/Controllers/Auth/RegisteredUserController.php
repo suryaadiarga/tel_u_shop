@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Mahasiswa;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,14 +31,20 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'nama' => 'required|string|max:100',
+            'nim' => 'required|string|max:20|unique:mahasiswa,nim',
+            'email' => 'required|string|email|max:255|unique:mahasiswa,email',
+            'prodi' => 'required|string|max:100',
+            'kelas' => 'required|string|max:10',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
+        $user = Mahasiswa::create([
+            'nama' => $request->nama,
+            'nim' => $request->nim,
             'email' => $request->email,
+            'prodi' => $request->prodi,
+            'kelas' => $request->kelas,
             'password' => Hash::make($request->password),
         ]);
 

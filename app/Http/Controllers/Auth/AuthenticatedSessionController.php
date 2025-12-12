@@ -30,22 +30,51 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $user = $request->validateCredentials();
+        // Attempt to authenticate using the `mahasiswa` provider and `nim` credential
+        // $credentials = $request->only('nim', 'password');
 
-        if (Features::enabled(Features::twoFactorAuthentication()) && $user->hasEnabledTwoFactorAuthentication()) {
-            $request->session()->put([
-                'login.id' => $user->getKey(),
-                'login.remember' => $request->boolean('remember'),
-            ]);
 
-            return to_route('two-factor.login');
-        }
+        // if (Features::enabled(Features::twoFactorAuthentication())) {
+            // If you're using two-factor tied to the user model, retrieve user first
+            // $user = \App\Models\Mahasiswa::where('nim', $request->nim)->first();
+            // if ($user && $user->hasEnabledTwoFactorAuthentication()) {
+                // $request->session()->put([
+                    // 'login.id' => $user->getKey(),
+                    // 'login.remember' => $request->boolean('remember'),
+                // ]);
 
-        Auth::login($user, $request->boolean('remember'));
+                // return to_route('two-factor.login');
+            // }
+        // }
 
-        $request->session()->regenerate();
+        // if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+        //     $user = Auth::guard('web')->user();
+        //     $request->session()->regenerate();
 
+        //     return redirect()->intended(route('dashboard', absolute: false));
+        // }
+
+        // If authentication failed, throw validation exception consistent with Fortify
+        // return back()->withErrors(['nim' => trans('auth.failed')])->onlyInput('nim');
+
+        $loginField = $request->input('login'); // bisa NIM atau Nama
+        $password   = $request->input('password');
+        
+        // Cari mahasiswa berdasarkan NIM atau Nama
+        $user = \App\Models\Mahasiswa::where('nim', $loginField)
+            ->orWhere('nama', $loginField)
+            ->first();
+            
+        if ($user && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+            Auth::guard('web')->login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+    
+    return back()->withErrors([
+        'login' => trans('auth.failed')
+        ])->onlyInput('login');
     }
 
     /**
