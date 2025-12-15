@@ -33,7 +33,7 @@ export default function Welcome() {
                     {auth.user ? (
                         <Link
                             href={dashboard()}
-                            className="w-full rounded-md bg-[var(--primary)] px-5 py-2 text-[var(--primary-foreground)] text-center font-medium hover-redbg-1 hover:hover-redbg-2"
+                            className="w-full text-[var(--primary-foreground)] rounded-md text-center font-medium px-5 py-2 hover-redbg-1 hover:hover-redbg-2"
                         >
                             Dashboard
                         </Link>
@@ -41,13 +41,13 @@ export default function Welcome() {
                         <>
                             <Link
                                 href={login()}
-                                className="w-full rounded-md bg-[var(--primary)] px-5 py-2 text-[var(--primary-foreground)] text-center font-medium hover-redbg-1 hover:hover-redbg-2"
+                                className="w-full text-[var(--primary-foreground)] rounded-md text-center font-medium px-5 py-2 hover-redbg-1 hover:hover-redbg-2"
                             >
                                 Login
                             </Link>
                             <Link
                                 href={register()}
-                                className="w-full rounded-md border border-[var(--destructive)] bg-[var(--primary-foreground)] px-5 py-2 text-[var(--destructive)] text-center font-medium hover:brightness-80"
+                                className="w-full text-[var(--destructive)] rounded-md text-center font-medium border border-[var(--destructive)] px-5 py-2 hover-whitebg-1 hover:hover-whitebg-2"
                             >
                                 Register
                             </Link>

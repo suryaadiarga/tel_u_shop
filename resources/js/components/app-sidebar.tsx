@@ -10,24 +10,40 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, shoppingcart, wishlist, history } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Folder, HomeIcon, ListChecks, ListCollapseIcon, ShoppingBag } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: HomeIcon,
+    },
+    {
+        title: 'Shopping Cart',
+        href: shoppingcart(),
+        icon: ShoppingBag,
+    },
+    {
+        title: 'Wish List',
+        href: wishlist(),
+        icon: ListCollapseIcon,
+    },
+    {
+        title: 'History',
+        href: history(),
+        icon: ListChecks,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
+        // href: 'https://github.com/laravel/react-starter-kit',
+        href: 'https://github.com/suryaadiarga/tel_u_shop',
         icon: Folder,
     },
     {

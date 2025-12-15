@@ -301,6 +301,240 @@ dashboardForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =
 dashboard.form = dashboardForm
 
 /**
+* @see routes/web.php:16
+* @route '/history'
+*/
+export const history = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: history.url(options),
+    method: 'get',
+})
+
+history.definition = {
+    methods: ["get","head"],
+    url: '/history',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+history.url = (options?: RouteQueryOptions) => {
+
+
+
+
+    return history.definition.url + queryParams(options)
+}
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+history.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: history.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+history.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: history.url(options),
+    method: 'head',
+})
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+const historyForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: history.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+historyForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: history.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:16
+* @route '/history'
+*/
+historyForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: history.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+history.form = historyForm
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+export const shoppingcart = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: shoppingcart.url(options),
+    method: 'get',
+})
+
+shoppingcart.definition = {
+    methods: ["get","head"],
+    url: '/cart',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+shoppingcart.url = (options?: RouteQueryOptions) => {
+
+
+
+
+    return shoppingcart.definition.url + queryParams(options)
+}
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+shoppingcart.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: shoppingcart.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+shoppingcart.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: shoppingcart.url(options),
+    method: 'head',
+})
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+const shoppingcartForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: shoppingcart.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+shoppingcartForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: shoppingcart.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:20
+* @route '/cart'
+*/
+shoppingcartForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: shoppingcart.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+shoppingcart.form = shoppingcartForm
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+export const wishlist = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: wishlist.url(options),
+    method: 'get',
+})
+
+wishlist.definition = {
+    methods: ["get","head"],
+    url: '/cart/wishlist',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+wishlist.url = (options?: RouteQueryOptions) => {
+
+
+
+
+    return wishlist.definition.url + queryParams(options)
+}
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+wishlist.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: wishlist.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+wishlist.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: wishlist.url(options),
+    method: 'head',
+})
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+const wishlistForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wishlist.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+wishlistForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wishlist.url(options),
+    method: 'get',
+})
+
+/**
+* @see routes/web.php:24
+* @route '/cart/wishlist'
+*/
+wishlistForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wishlist.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+wishlist.form = wishlistForm
+
+/**
 * @see \App\Http\Controllers\Auth\RegisteredUserController::register
 * @see app/Http/Controllers/Auth/RegisteredUserController.php:21
 * @route '/register'

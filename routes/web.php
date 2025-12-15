@@ -13,5 +13,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
+Route::get('/history', function() {
+    return Inertia::render('history');
+})->name('history');
+
+Route::get('/cart', function() {
+    return Inertia::render('cart/shoppingcart');
+})->name('shoppingcart');
+
+Route::get('/cart/wishlist', function() {
+    return Inertia::render('cart/wishlist');
+})->name('wishlist');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -102,12 +102,12 @@
         background-color: #cb1f1f;
     }
 
-    /* .hover-whitebg-1 {
+    .hover-whitebg-1 {
         background-color: #ffffff;
     }
-    .hover\:hover-redbg-2:hover {
-        background-color: #9a9a9a;
-    } */
+    .hover\:hover-whitebg-2:hover {
+        background-color: #c1c6ce;
+    }
 }
 
 /* dark mode variables removed - theme uses only :root */
