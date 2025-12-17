@@ -7,8 +7,13 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\WalletController;
 use App\Http\Controllers\Customer\ActivityController;
+use App\Http\Controllers\Customer\WishlistController;
+use App\Http\Controllers\Customer\ReviewController;
+use App\Http\Controllers\Customer\LoyaltyController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Merchant\ProductController as MerchantProductController;
 use App\Http\Controllers\Merchant\OrderController as MerchantOrderController;
+use App\Http\Controllers\Merchant\AnalyticsController as MerchantAnalyticsController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 
@@ -57,6 +62,35 @@ Route::middleware('api')->group(function () {
         Route::get('/activities/{id}', [ActivityController::class, 'show']);
         Route::get('/activities/{id}/track', [ActivityController::class, 'track']);
 
+        // Customer - Wishlist
+        Route::get('/wishlist', [WishlistController::class, 'index']);
+        Route::post('/wishlist/add/{product}', [WishlistController::class, 'add']);
+        Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove']);
+        Route::get('/wishlist/check/{product}', [WishlistController::class, 'check']);
+
+        // Customer - Reviews
+        Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
+        Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+        Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+        Route::put('/reviews/{review}', [ReviewController::class, 'update']);
+        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+        Route::get('/my-reviews', [ReviewController::class, 'myReviews']);
+
+        // Customer - Loyalty Points
+        Route::get('/loyalty/balance', [LoyaltyController::class, 'balance']);
+        Route::get('/loyalty/history', [LoyaltyController::class, 'history']);
+        Route::post('/loyalty/redeem', [LoyaltyController::class, 'redeem']);
+        Route::get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
+
+        // Customer - Notifications
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/stats', [NotificationController::class, 'stats']);
+        Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::put('/notifications/mark-read', [NotificationController::class, 'markMultipleAsRead']);
+        Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
         /*
         |--------------------------------------------------------------------------
         | Merchant Routes
@@ -72,6 +106,12 @@ Route::middleware('api')->group(function () {
             // Orders
             Route::get('/merchant/orders', [MerchantOrderController::class, 'index']);
             Route::put('/merchant/orders/{id}/status', [MerchantOrderController::class, 'updateStatus']);
+
+            // Analytics
+            Route::get('/merchant/analytics/dashboard', [MerchantAnalyticsController::class, 'dashboard']);
+            Route::get('/merchant/analytics/sales', [MerchantAnalyticsController::class, 'salesAnalytics']);
+            Route::get('/merchant/analytics/products', [MerchantAnalyticsController::class, 'productPerformance']);
+            Route::get('/merchant/analytics/customers', [MerchantAnalyticsController::class, 'customerAnalytics']);
         });
 
         /*

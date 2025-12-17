@@ -1,0 +1,304 @@
+<?php
+
+namespace App\Http\Controllers\Merchant;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Review;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class AnalyticsController extends Controller
+{
+    /**
+     * Dashboard overview dengan metrics utama.
+     */
+    public function dashboard(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $period = $request->get('period', '30'); // days
+
+            $startDate = Carbon::now()->subDays($period);
+
+            // Total produk
+            $totalProducts = Product::where('user_id', $user->id)->count();
+
+            // Total penjualan
+            $totalSales = OrderItem::whereHas('product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('order', function ($query) use ($startDate) {
+                $query->where('created_at', '>=', $startDate)
+                    ->where('status', 'completed');
+            })->sum('quantity');
+
+            // Total revenue
+            $totalRevenue = OrderItem::whereHas('product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('order', function ($query) use ($startDate) {
+                $query->where('created_at', '>=', $startDate)
+                    ->where('status', 'completed');
+            })->sum(DB::raw('quantity * price_snapshot'));
+
+            // Rata-rata rating produk
+            $averageRating = Review::whereHas('product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->avg('rating') ?? 0;
+
+            // Produk terlaris
+            $topProducts = Product::where('user_id', $user->id)
+                ->withCount(['orderItems as total_sold' => function ($query) use ($startDate) {
+                    $query->whereHas('order', function ($orderQuery) use ($startDate) {
+                        $orderQuery->where('created_at', '>=', $startDate)
+                            ->where('status', 'completed');
+                    });
+                }])
+                ->orderBy('total_sold', 'desc')
+                ->take(5)
+                ->get();
+
+            // Tren penjualan harian (7 hari terakhir)
+            $salesTrend = OrderItem::whereHas('product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('order', function ($query) {
+                $query->where('created_at', '>=', Carbon::now()->subDays(7))
+                    ->where('status', 'completed');
+            })->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(quantity) as total_quantity'),
+                DB::raw('SUM(quantity * price_snapshot) as total_revenue')
+            )
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'overview' => [
+                        'total_products' => $totalProducts,
+                        'total_sales' => $totalSales,
+                        'total_revenue' => $totalRevenue,
+                        'average_rating' => round($averageRating, 1),
+                    ],
+                    'top_products' => $topProducts,
+                    'sales_trend' => $salesTrend,
+                    'period_days' => $period,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data dashboard.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analisis penjualan detail.
+     */
+    public function salesAnalytics(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
+            $endDate = $request->get('end_date', Carbon::now()->toDateString());
+
+            // Penjualan per produk
+            $productSales = Product::where('user_id', $user->id)
+                ->with(['orderItems' => function ($query) use ($startDate, $endDate) {
+                    $query->whereHas('order', function ($orderQuery) use ($startDate, $endDate) {
+                        $orderQuery->whereBetween('created_at', [$startDate, $endDate])
+                            ->where('status', 'completed');
+                    })->select(
+                        'product_id',
+                        DB::raw('SUM(quantity) as total_quantity'),
+                        DB::raw('SUM(quantity * price_snapshot) as total_revenue')
+                    )->groupBy('product_id');
+                }])
+                ->get()
+                ->map(function ($product) {
+                    $orderItem = $product->orderItems->first();
+                    return [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'total_quantity' => $orderItem ? $orderItem->total_quantity : 0,
+                        'total_revenue' => $orderItem ? $orderItem->total_revenue : 0,
+                        'average_rating' => $product->reviews->avg('rating') ?? 0,
+                    ];
+                });
+
+            // Penjualan per hari
+            $dailySales = OrderItem::whereHas('product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('order', function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate])
+                    ->where('status', 'completed');
+            })->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(quantity) as total_quantity'),
+                DB::raw('SUM(quantity * price_snapshot) as total_revenue'),
+                DB::raw('COUNT(DISTINCT order_id) as total_orders')
+            )
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            // Status pesanan
+            $orderStatus = Order::whereHas('orderItems.product', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereBetween('created_at', [$startDate, $endDate])
+                ->select('status', DB::raw('COUNT(*) as count'))
+                ->groupBy('status')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'product_sales' => $productSales,
+                    'daily_sales' => $dailySales,
+                    'order_status' => $orderStatus,
+                    'date_range' => [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                    ],
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data analisis penjualan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analisis performa produk.
+     */
+    public function productPerformance(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $products = Product::where('user_id', $user->id)
+                ->with(['reviews', 'orderItems' => function ($query) {
+                    $query->whereHas('order', function ($orderQuery) {
+                        $orderQuery->where('status', 'completed');
+                    });
+                }])
+                ->get()
+                ->map(function ($product) {
+                    $totalSold = $product->orderItems->sum('quantity');
+                    $totalRevenue = $product->orderItems->sum(function ($item) {
+                        return $item->quantity * $item->price_snapshot;
+                    });
+                    $averageRating = $product->reviews->avg('rating') ?? 0;
+                    $reviewCount = $product->reviews->count();
+
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'price' => $product->price,
+                        'stock' => $product->stock,
+                        'is_available' => $product->is_available,
+                        'total_sold' => $totalSold,
+                        'total_revenue' => $totalRevenue,
+                        'average_rating' => round($averageRating, 1),
+                        'review_count' => $reviewCount,
+                        'performance_score' => $this->calculatePerformanceScore($totalSold, $totalRevenue, $averageRating),
+                    ];
+                })
+                ->sortByDesc('performance_score')
+                ->values();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $products
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data performa produk.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analisis pelanggan.
+     */
+    public function customerAnalytics(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Top customers berdasarkan pembelian
+            $topCustomers = DB::table('users')
+                ->join('orders', 'users.id', '=', 'orders.user_id')
+                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->where('products.user_id', $user->id)
+                ->where('orders.status', 'completed')
+                ->select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
+                    DB::raw('SUM(order_items.quantity) as total_quantity'),
+                    DB::raw('SUM(order_items.quantity * order_items.price_snapshot) as total_spent'),
+                    DB::raw('MAX(orders.created_at) as last_order_date')
+                )
+                ->groupBy('users.id', 'users.name', 'users.email')
+                ->orderBy('total_spent', 'desc')
+                ->take(10)
+                ->get();
+
+            // Customer acquisition trend
+            $customerAcquisition = DB::table('users')
+                ->join('orders', 'users.id', '=', 'orders.user_id')
+                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->where('products.user_id', $user->id)
+                ->where('orders.status', 'completed')
+                ->select(
+                    DB::raw('DATE(MIN(orders.created_at)) as first_purchase_date'),
+                    DB::raw('COUNT(DISTINCT users.id) as new_customers')
+                )
+                ->groupBy(DB::raw('DATE(MIN(orders.created_at))'))
+                ->orderBy('first_purchase_date')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'top_customers' => $topCustomers,
+                    'customer_acquisition' => $customerAcquisition,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data analisis pelanggan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Hitung performance score untuk produk.
+     */
+    private function calculatePerformanceScore($totalSold, $totalRevenue, $averageRating)
+    {
+        // Weight: 40% sales volume, 40% revenue, 20% rating
+        $salesScore = min($totalSold / 100, 1) * 40; // Max score at 100 sales
+        $revenueScore = min($totalRevenue / 10000000, 1) * 40; // Max score at 10M revenue
+        $ratingScore = ($averageRating / 5) * 20; // Rating out of 5
+
+        return $salesScore + $revenueScore + $ratingScore;
+    }
+}

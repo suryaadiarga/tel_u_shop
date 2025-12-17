@@ -20,7 +20,6 @@ class UserFactory extends Factory
             'kelas' => $this->faker->randomElement(['IF-45-01', 'IF-45-02', 'IF-45-03']),
             'phone' => $this->faker->phoneNumber(),
             'avatar_url' => $this->faker->imageUrl(200, 200, 'people', true),
-            'ewallet_balance' => $this->faker->numberBetween(0, 1000000),
             'role_id' => 3, // default customer
         ];
     }

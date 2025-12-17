@@ -18,7 +18,7 @@ $c = [
     'reset' => "\033[0m",
 ];
 
-$BASE_URL = 'http://127.0.0.1:8000/api';
+$BASE_URL = 'http://localhost:3000/api'; // Updated to port 3000
 $PASS_COUNT = 0;
 $FAIL_COUNT = 0;
 
@@ -50,7 +50,17 @@ function request($method, $endpoint, $data = [], $token = null)
 
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    ($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        return [
+            'code' => 0,
+            'data' => null,
+            'error' => $error,
+            'raw' => ''
+        ];
+    }
 
     return [
         'code' => $http_code,

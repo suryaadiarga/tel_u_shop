@@ -5,16 +5,15 @@
  * Tests: Auth, Cart, Checkout, Wallet, Orders, Admin, Merchant
  */
 
-require 'bootstrap/app.php';
+// This script uses curl to call the running Laravel API — no need to bootstrap the app here.
+// require 'bootstrap/app.php';
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+// (Facades/imports removed because this script runs external HTTP requests.)
 
 // Helper function to make API calls
 function apiCall($method, $endpoint, $data = [], $token = null)
 {
-    $baseUrl = 'http://127.0.0.1:8000/api';
+    $baseUrl = 'http://localhost:3000/api';
     $url = $baseUrl . $endpoint;
 
     $ch = curl_init($url);
@@ -112,6 +111,7 @@ $loginRes = apiCall('POST', '/login', [
 ]);
 
 if ($loginRes['status'] === 'success') {
+    $customerToken = $loginRes['data']['access_token']; // Use login token
     printTest("Customer Login");
 } else {
     printError("Customer Login", $loginRes);

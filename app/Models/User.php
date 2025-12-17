@@ -49,7 +49,7 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'wallet_balance' => 'float',
+        'ewallet_balance' => 'float',
     ];
 
     // Relasi
@@ -76,6 +76,16 @@ class User extends Authenticatable
     public function activities(): HasMany
     {
         return $this->hasMany(Activity::class);
+    }
+
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 
     // Helpers

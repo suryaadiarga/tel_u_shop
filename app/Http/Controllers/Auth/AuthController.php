@@ -83,6 +83,7 @@ class AuthController extends Controller
         }
 
         // Keamanan: Hapus token lama agar hanya ada satu sesi aktif
+        // Menggunakan delete() method yang tersedia dari HasApiTokens trait
         $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;

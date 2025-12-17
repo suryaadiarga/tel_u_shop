@@ -13,21 +13,18 @@ class UserSeeder extends Seeder
             'name' => 'Admin Koperasi',
             'email' => 'admin@koperasi.test',
             'role_id' => 1,
-            'ewallet_balance' => 1000000,
         ]);
 
         User::factory()->create([
             'name' => 'Merchant A',
             'email' => 'merchant@koperasi.test',
             'role_id' => 2,
-            'ewallet_balance' => 500000,
         ]);
 
         User::factory()->create([
             'name' => 'Customer A',
             'email' => 'customer@koperasi.test',
             'role_id' => 3,
-            'ewallet_balance' => 200000,
         ]);
     }
 }
