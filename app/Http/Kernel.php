@@ -59,13 +59,22 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 
-        // Role alias → wajib numeric role_id
-        'role' => \App\Http\Middleware\CheckUserRole::class,
+        // Role alias → supports both name and id
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+    ];
+
+    /**
+     * Backwards-compatible route middleware mapping for older Laravel helpers.
+     * Some parts of the framework expect $routeMiddleware to exist.
+     *
+     * @var array
+     */
+    protected $routeMiddleware = [
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }

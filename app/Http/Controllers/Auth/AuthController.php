@@ -31,12 +31,12 @@ class AuthController extends Controller
             $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
-                'password' => Hash::make($request->password),
-                'role'     => $request->role,
+                'password' => $request->password,
+                'role_id'  => $request->role,
             ]);
 
             // Inisialisasi saldo awal atau profil tambahan jika diperlukan
-            if ($user->role == 3) {
+            if ($user->role_id == 3) {
                 // Contoh: $user->wallet()->create(['balance' => 0]);
             }
 
@@ -53,7 +53,6 @@ class AuthController extends Controller
                     'token_type'   => 'Bearer',
                 ]
             ], 201);
-
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -85,7 +84,7 @@ class AuthController extends Controller
 
         // Keamanan: Hapus token lama agar hanya ada satu sesi aktif
         $user->tokens()->delete();
-        
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

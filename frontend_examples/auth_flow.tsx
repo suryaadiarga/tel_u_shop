@@ -1,0 +1,1 @@
+This file demonstrates the authentication flow in React, including login and registration using the provided API endpoints.

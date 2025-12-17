@@ -62,7 +62,7 @@ Route::middleware('api')->group(function () {
         | Merchant Routes
         |--------------------------------------------------------------------------
         */
-        Route::middleware('role:merchant')->group(function () {
+        Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':merchant')->group(function () {
             // Products
             Route::get('/merchant/products', [MerchantProductController::class, 'index']);
             Route::post('/merchant/products', [MerchantProductController::class, 'store']);
@@ -79,7 +79,7 @@ Route::middleware('api')->group(function () {
         | Admin Routes
         |--------------------------------------------------------------------------
         */
-        Route::middleware('role:admin')->group(function () {
+        Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':admin')->group(function () {
             // Orders
             Route::get('/admin/orders', [AdminOrderController::class, 'index']);
             Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show']);
