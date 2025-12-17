@@ -4,117 +4,105 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\WalletTransaction;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class WalletController extends Controller
 {
-    public function index()
+    /**
+     * Mengambil saldo dompet saat ini.
+     */
+    public function balance(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = $request->user();
 
-        if (!$user) {
             return response()->json([
-                'error'   => 'Unauthenticated',
-                'message' => 'Silakan login terlebih dahulu.'
-            ], 401);
+                'status' => 'success',
+                'data' => [
+                    'balance' => $user->wallet_balance,
+                    'formatted' => 'Rp ' . number_format($user->wallet_balance, 0, ',', '.'),
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil saldo.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $transactions = WalletTransaction::where('user_id', $user->id)
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $totalIn  = $transactions->where('type', 'topup')->sum('amount');
-        $totalOut = $transactions->where('type', 'payment')->sum('amount');
-
-        return response()->json([
-            'balance'      => $user->wallet_balance,
-            'transactions' => $transactions,
-            'meta'         => [
-                'count'     => $transactions->count(),
-                'total_in'  => $totalIn,
-                'total_out' => $totalOut,
-                'user'      => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
-                ],
-            ],
-        ]);
     }
 
-    public function balance()
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'error'   => 'Unauthenticated',
-                'message' => 'Silakan login terlebih dahulu.'
-            ], 401);
-        }
-
-        return response()->json([
-            'balance' => $user->wallet_balance,
-        ]);
-    }
-
-    public function transactions()
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'error'   => 'Unauthenticated',
-                'message' => 'Silakan login terlebih dahulu.'
-            ], 401);
-        }
-
-        $transactions = WalletTransaction::where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'data' => $transactions,
-            'meta' => [
-                'count'     => $transactions->count(),
-                'total_in'  => $transactions->where('type', 'topup')->sum('amount'),
-                'total_out' => $transactions->where('type', 'payment')->sum('amount'),
-            ]
-        ]);
-    }
-
+    /**
+     * Proses Top Up Saldo.
+     */
     public function topup(Request $request)
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'error'   => 'Unauthenticated',
-                'message' => 'Silakan login terlebih dahulu.'
-            ], 401);
-        }
-
-        $validated = $request->validate([
+        $request->validate([
             'amount' => 'required|numeric|min:1000',
         ]);
 
-        WalletTransaction::create([
-            'user_id'     => $user->id,
-            'type'        => 'topup',
-            'amount'      => $validated['amount'],
-            'title'       => 'Top‑up',
-            'description' => 'Top‑up saldo wallet',
-            'order_id'    => null,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $user->increment('wallet_balance', $validated['amount']);
-        $user->refresh();
+            $user = $request->user();
+            $amount = (int) $request->amount;
 
-        return response()->json([
-            'message' => 'Top‑up berhasil.',
-            'balance' => $user->wallet_balance,
-        ]);
+            // Tambah saldo user
+            $user->increment('wallet_balance', $amount);
+
+            // Catat transaksi
+            WalletTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'title' => 'Top Up Saldo',
+                'type' => 'topup',
+                'description' => 'Top up saldo dompet sebesar Rp ' . number_format($amount, 0, ',', '.'),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Top up berhasil.',
+                'data' => [
+                    'current_balance' => $user->wallet_balance,
+                    'formatted' => 'Rp ' . number_format($user->wallet_balance, 0, ',', '.'),
+                ]
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal melakukan top up.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mengambil riwayat transaksi dompet.
+     */
+    public function transactions(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $transactions = WalletTransaction::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $transactions
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil riwayat transaksi.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

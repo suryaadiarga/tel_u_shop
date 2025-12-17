@@ -5,39 +5,36 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
+use Exception;
 
 class OrderController extends Controller
 {
     /**
      * List semua order (admin).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('items', 'user')->latest()->get();
+        try {
+            $query = Order::with(['items.product', 'user']);
 
-        return response()->json([
-            'data' => $orders
-        ]);
-    }
+            // Filter by status if provided
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
 
-    /**
-     * Form create order (resource stub).
-     */
-    public function create()
-    {
-        return response()->json([
-            'message' => 'Not implemented: create order form (admin).'
-        ], 200);
-    }
+            $orders = $query->orderBy('created_at', 'desc')->get();
 
-    /**
-     * Simpan order baru (resource stub).
-     */
-    public function store(Request $request)
-    {
-        return response()->json([
-            'message' => 'Not implemented: store order (admin).'
-        ], 200);
+            return response()->json([
+                'status' => 'success',
+                'data' => $orders
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data pesanan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -45,66 +42,49 @@ class OrderController extends Controller
      */
     public function show($id)
     {
-        $order = Order::with('items', 'user')->findOrFail($id);
+        try {
+            $order = Order::with(['items.product', 'user'])->findOrFail($id);
 
-        return response()->json([
-            'data' => $order
-        ]);
-    }
-
-    /**
-     * Form edit order (resource stub).
-     */
-    public function edit($id)
-    {
-        $order = Order::findOrFail($id);
-
-        return response()->json([
-            'message' => 'Not implemented: edit order form (admin).',
-            'data' => $order
-        ], 200);
-    }
-
-    /**
-     * Update order (resource stub).
-     */
-    public function update(Request $request, $id)
-    {
-        return response()->json([
-            'message' => 'Not implemented: update order (admin).'
-        ], 200);
-    }
-
-    /**
-     * Hapus order (resource stub).
-     */
-    public function destroy($id)
-    {
-        return response()->json([
-            'message' => 'Not implemented: destroy order (admin).'
-        ], 200);
+            return response()->json([
+                'status' => 'success',
+                'data' => $order
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan tidak ditemukan.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
      * Update status order (custom endpoint).
-     * Route: PUT /api/admin/orders/{id}/status
-     * Route: PATCH /admin/orders/{id}/status (jika web explicit route dipakai)
      */
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        try {
+            $order = Order::findOrFail($id);
 
-        $request->validate([
-            'status' => 'required|in:pending,paid,shipped,completed,cancelled'
-        ]);
+            $request->validate([
+                'status' => 'required|in:pending,paid,shipped,completed,cancelled'
+            ]);
 
-        $order->update([
-            'status' => $request->status
-        ]);
+            $order->update([
+                'status' => $request->status
+            ]);
 
-        return response()->json([
-            'message' => 'Status order diperbarui.',
-            'data' => $order
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status order berhasil diperbarui.',
+                'data' => $order
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui status order.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

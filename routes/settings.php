@@ -1,9 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Exceptions\Handler;
 
-Route::middleware(['auth'])->prefix('settings')->group(function () {
-    Route::get('/', function () {
-        return view('settings.index', ['title' => 'Pengaturan']);
-    })->name('settings.index');
+/*
+|--------------------------------------------------------------------------
+| Settings Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/settings', function () {
+    return response()->json([
+        'message' => 'Settings endpoint'
+    ]);
 });

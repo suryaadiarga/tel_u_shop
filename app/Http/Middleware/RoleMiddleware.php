@@ -35,14 +35,22 @@ class RoleMiddleware
         }
 
         // Cek match oleh name atau id
-        $authorized = collect($roles)->contains(function ($r) use ($currentRoleId, $currentRoleName) {
+        $authorized = false;
+        foreach ($roles as $role) {
             // Jika numeric → bandingkan role_id
-            if (is_numeric($r)) {
-                return (int)$r === (int)$currentRoleId;
+            if (is_numeric($role)) {
+                if ((int)$role === (int)$currentRoleId) {
+                    $authorized = true;
+                    break;
+                }
+            } else {
+                // Jika string → bandingkan name (lowercase)
+                if (Str::lower($role) === Str::lower((string)$currentRoleName)) {
+                    $authorized = true;
+                    break;
+                }
             }
-            // Jika string → bandingkan name (lowercase)
-            return Str::lower($r) === Str::lower((string)$currentRoleName);
-        });
+        }
 
         if (!$authorized) {
             return response()->json([

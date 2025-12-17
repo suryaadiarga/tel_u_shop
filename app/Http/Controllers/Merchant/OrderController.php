@@ -5,22 +5,37 @@ namespace App\Http\Controllers\Merchant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\OrderItem;
+use Exception;
 
 class OrderController extends Controller
 {
     /**
      * List order milik merchant (produk yang dijual merchant).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('items.product')
-            ->whereHas('items.product', fn($q) => $q->where('merchant_id', auth()->id()))
-            ->latest()
-            ->get();
+        try {
+            $merchantId = $request->user()->id;
 
-        return response()->json([
-            'data' => $orders
-        ]);
+            $orders = Order::with(['items.product', 'user'])
+                ->whereHas('items.product', function ($query) use ($merchantId) {
+                    $query->where('merchant_id', $merchantId);
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $orders
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data pesanan.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -28,19 +43,44 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        try {
+            $merchantId = $request->user()->id;
 
-        $request->validate([
-            'status' => 'required|in:pending,paid,shipped,completed,cancelled'
-        ]);
+            $request->validate([
+                'status' => 'required|in:pending,paid,shipped,completed,cancelled'
+            ]);
 
-        $order->update([
-            'status' => $request->status
-        ]);
+            // Verify merchant ownership - check if merchant has products in this order
+            $order = Order::findOrFail($id);
 
-        return response()->json([
-            'message' => 'Status order diperbarui oleh merchant.',
-            'data' => $order
-        ]);
+            $hasAccess = $order->items()
+                ->whereHas('product', function ($query) use ($merchantId) {
+                    $query->where('merchant_id', $merchantId);
+                })
+                ->exists();
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak memiliki akses ke order ini.'
+                ], 403);
+            }
+
+            $order->update([
+                'status' => $request->status
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status order berhasil diperbarui.',
+                'data' => $order
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui status order.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

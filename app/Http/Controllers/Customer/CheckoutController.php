@@ -4,93 +4,119 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use App\Models\WalletTransaction;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class CheckoutController extends Controller
 {
     /**
-     * Proses checkout keranjang user.
+     * Memproses checkout dari keranjang belanja ke pesanan.
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $cart = session()->get('cart', []);
+        $user = $request->user();
 
-        if (empty($cart)) {
-            return response()->json([
-                'error' => 'Keranjang kosong.'
-            ], 400);
-        }
-
-        // Hitung total
-        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['qty']);
-
-        // Cek saldo wallet
-        if ($user->wallet_balance < $total) {
-            return response()->json([
-                'error' => 'Saldo wallet tidak cukup.'
-            ], 402);
-        }
-
-        DB::beginTransaction();
         try {
-            // Buat order
+            DB::beginTransaction();
+
+            // 1. Ambil cart dan items
+            $cart = Cart::where('user_id', $user->id)->first();
+
+            if (!$cart) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Keranjang belanja Anda kosong.'
+                ], 400);
+            }
+
+            $cartItems = CartItem::with('product')
+                ->where('cart_id', $cart->id)
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Keranjang belanja Anda kosong.'
+                ], 400);
+            }
+
+            // 2. Hitung total harga dan validasi stok
+            $totalAmount = 0;
+            foreach ($cartItems as $item) {
+                if ($item->product->stock < $item->qty) {
+                    throw new Exception("Stok produk '{$item->product->name}' tidak mencukupi.");
+                }
+                $totalAmount += $item->price_snapshot * $item->qty;
+            }
+
+            // 3. Validasi Saldo Wallet (gunakan wallet_balance di User model)
+            if ($user->wallet_balance < $totalAmount) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Saldo dompet tidak mencukupi. Silakan top up terlebih dahulu.'
+                ], 400);
+            }
+
+            // 4. Buat Order Utama
             $order = Order::create([
                 'user_id' => $user->id,
-                'status' => 'paid',
-                'total_amount' => $total,
+                'total' => $totalAmount,
+                'status' => 'pending',
                 'placed_at' => now(),
             ]);
 
-            // Buat order items
-            foreach ($cart as $item) {
+            // 5. Pindahkan item keranjang ke OrderItems & Update Stok
+            foreach ($cartItems as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'qty' => $item['qty'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['price'] * $item['qty'],
+                    'product_id' => $item->product_id,
+                    'qty' => $item->qty,
+                    'price' => $item->price_snapshot,
+                    'subtotal' => $item->qty * $item->price_snapshot,
                 ]);
 
                 // Kurangi stok produk
-                Product::where('id', $item['product_id'])
-                    ->decrement('stock', $item['qty']);
+                $item->product->decrement('stock', $item->qty);
             }
 
-            // Catat transaksi wallet
+            // 6. Potong Saldo Wallet
+            $user->decrement('wallet_balance', $totalAmount);
+
+            // 7. Catat transaksi wallet
             WalletTransaction::create([
                 'user_id' => $user->id,
+                'amount' => -$totalAmount,
+                'title' => 'Pembayaran Order #' . $order->id,
                 'type' => 'payment',
-                'amount' => $total,
-                'description' => 'Pembayaran order #' . $order->id,
+                'order_id' => $order->id,
+                'description' => 'Pembayaran order ke merchant',
             ]);
 
-            // Update saldo wallet user
-            $user->decrement('wallet_balance', $total);
+            // 8. Kosongkan Keranjang
+            CartItem::where('cart_id', $cart->id)->delete();
 
             DB::commit();
 
-            // Kosongkan cart
-            session()->forget('cart');
-
             return response()->json([
-                'message' => 'Checkout berhasil.',
-                'order' => $order->load('items'),
-                'wallet' => [
-                    'balance' => $user->wallet_balance,
-                    'last_transaction' => 'payment',
+                'status' => 'success',
+                'message' => 'Checkout berhasil dilakukan.',
+                'data' => [
+                    'order_id' => $order->id,
+                    'total_paid' => $totalAmount,
+                    'order' => $order->load('items.product'),
                 ]
-            ]);
-        } catch (\Exception $e) {
+            ], 201);
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
-                'error' => 'Checkout gagal.',
-                'details' => $e->getMessage()
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat checkout.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

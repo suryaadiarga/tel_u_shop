@@ -4,78 +4,144 @@ namespace App\Http\Controllers\Merchant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class ProductController extends Controller
 {
     /**
-     * List semua produk milik merchant.
+     * Menampilkan daftar produk milik merchant yang sedang login.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::where('merchant_id', Auth::id())->latest()->get();
+        try {
+            $products = Product::where('merchant_id', $request->user()->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        return response()->json([
-            'data' => $products
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $products
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data produk.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Tambah produk baru.
+     * Menyimpan produk baru ke database.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:1000',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $product = Product::create([
-            'merchant_id' => Auth::id(),
-            'name' => $validated['name'],
-            'price' => $validated['price'],
-            'stock' => $validated['stock'],
-        ]);
+        try {
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('products', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Produk berhasil ditambahkan.',
-            'data' => $product
-        ]);
+            $product = Product::create([
+                'merchant_id' => $request->user()->id,
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'stock' => $request->stock,
+                'image_url' => $imagePath,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Produk berhasil ditambahkan.',
+                'data' => $product
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menambahkan produk.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Update produk.
+     * Memperbarui data produk.
      */
     public function update(Request $request, $id)
     {
-        $product = Product::where('merchant_id', Auth::id())->findOrFail($id);
+        $product = Product::where('id', $id)
+            ->where('merchant_id', $request->user()->id)
+            ->firstOrFail();
 
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'sometimes|string|max:255',
-            'price' => 'sometimes|numeric|min:1000',
+            'description' => 'sometimes|string',
+            'price' => 'sometimes|numeric|min:0',
             'stock' => 'sometimes|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $product->update($validated);
+        try {
+            if ($request->hasFile('image')) {
+                if ($product->image_url) {
+                    Storage::delete($product->image_url);
+                }
+                $product->image_url = $request->file('image')->store('products', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Produk berhasil diperbarui.',
-            'data' => $product
-        ]);
+            $product->update($request->only(['name', 'description', 'price', 'stock']));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Produk berhasil diperbarui.',
+                'data' => $product
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui produk.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Hapus produk.
+     * Menghapus produk.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $product = Product::where('merchant_id', Auth::id())->findOrFail($id);
-        $product->delete();
+        try {
+            $product = Product::where('id', $id)
+                ->where('merchant_id', $request->user()->id)
+                ->firstOrFail();
 
-        return response()->json([
-            'message' => 'Produk berhasil dihapus.'
-        ]);
+            if ($product->image_url) {
+                Storage::delete($product->image_url);
+            }
+
+            $product->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Produk berhasil dihapus.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menghapus produk.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
