@@ -13,7 +13,7 @@
 // Helper function to make API calls
 function apiCall($method, $endpoint, $data = [], $token = null)
 {
-    $baseUrl = 'http://localhost:3000/api';
+    $baseUrl = 'http://127.0.0.1:8000/api';
     $url = $baseUrl . $endpoint;
 
     $ch = curl_init($url);

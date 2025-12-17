@@ -3,28 +3,47 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class UserSeeder extends Seeder
 {
     public function run()
     {
-        User::factory()->create([
-            'name' => 'Admin Koperasi',
-            'email' => 'admin@koperasi.test',
-            'role_id' => 1,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@koperasi.test'],
+            [
+                'name' => 'Admin Koperasi',
+                'password' => Hash::make('password'),
+                'role_id' => 1,
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Merchant A',
-            'email' => 'merchant@koperasi.test',
-            'role_id' => 2,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'merchant@koperasi.test'],
+            [
+                'name' => 'Merchant A',
+                'password' => Hash::make('password'),
+                'role_id' => 2,
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Customer A',
-            'email' => 'customer@koperasi.test',
-            'role_id' => 3,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'customer@koperasi.test'],
+            [
+                'name' => 'Customer A',
+                'password' => Hash::make('password'),
+                'role_id' => 3,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'suryaadiarga@student.telkomuniversity.ac.id'],
+            [
+                'name' => 'Surya Adiarga',
+                'password' => Hash::make('12345'),
+                'role_id' => 1,
+            ]
+        );
     }
 }

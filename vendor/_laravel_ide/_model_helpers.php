@@ -2570,8 +2570,22 @@ namespace App\Models {
     /**
      * App\Models\Review
      *
+     * @property \Illuminate\Support\Carbon|null $updated_at
+     * @property \Illuminate\Support\Carbon|null $created_at
+     * @property string|null $comment
+     * @property integer $rating
+     * @property int $product_id
+     * @property int $user_id
+     * @property int $id
      * @property-read \App\Models\User $user
      * @property-read \App\Models\Product $product
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereUserId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereProductId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereRating($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereComment($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereCreatedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Review>|Review query()
