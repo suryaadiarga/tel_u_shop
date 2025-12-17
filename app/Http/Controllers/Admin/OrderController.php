@@ -3,88 +3,76 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Order;
-use Exception;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     /**
-     * List semua order (admin).
+     * Get all orders with pagination
      */
     public function index(Request $request)
     {
-        try {
-            $query = Order::with(['items.product', 'user']);
+        $query = Order::with(['user:id,name,email', 'items.product:id,name']);
 
-            // Filter by status if provided
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
-            }
-
-            $orders = $query->orderBy('created_at', 'desc')->get();
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $orders
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal mengambil data pesanan.',
-                'error' => $e->getMessage()
-            ], 500);
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
         }
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [$request->input('start_date'), $request->input('end_date')]);
+        }
+
+        // Search by order ID or user name
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $orders
+        ]);
     }
 
     /**
-     * Detail order tertentu.
+     * Get a specific order
      */
-    public function show($id)
+    public function show(Request $request, Order $order)
     {
-        try {
-            $order = Order::with(['items.product', 'user'])->findOrFail($id);
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $order
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Pesanan tidak ditemukan.',
-                'error' => $e->getMessage()
-            ], 404);
-        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $order->load(['user:id,name,email', 'items.product:id,name,price'])
+        ]);
     }
 
     /**
-     * Update status order (custom endpoint).
+     * Update order status
      */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, Order $order)
     {
-        try {
-            $order = Order::findOrFail($id);
+        $request->validate([
+            'status' => 'required|in:pending,processing,completed,cancelled'
+        ]);
 
-            $request->validate([
-                'status' => 'required|in:pending,paid,shipped,completed,cancelled'
-            ]);
+        $order->update([
+            'status' => $request->input('status')
+        ]);
 
-            $order->update([
-                'status' => $request->status
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Status order berhasil diperbarui.',
-                'data' => $order
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal memperbarui status order.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Order status updated successfully',
+            'data' => $order
+        ]);
     }
 }

@@ -14,7 +14,7 @@ use Carbon\Carbon;
 class AnalyticsController extends Controller
 {
     /**
-     * Dashboard overview dengan metrics utama.
+     * Dashboard overview with key metrics.
      */
     public function dashboard(Request $request)
     {
@@ -24,10 +24,10 @@ class AnalyticsController extends Controller
 
             $startDate = Carbon::now()->subDays($period);
 
-            // Total produk
+            // Total products
             $totalProducts = Product::where('user_id', $user->id)->count();
 
-            // Total penjualan
+            // Total sales
             $totalSales = OrderItem::whereHas('product', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->whereHas('order', function ($query) use ($startDate) {
@@ -43,12 +43,12 @@ class AnalyticsController extends Controller
                     ->where('status', 'completed');
             })->sum(DB::raw('quantity * price_snapshot'));
 
-            // Rata-rata rating produk
+            // Average rating of products
             $averageRating = Review::whereHas('product', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->avg('rating') ?? 0;
 
-            // Produk terlaris
+            // Top products
             $topProducts = Product::where('user_id', $user->id)
                 ->withCount(['orderItems as total_sold' => function ($query) use ($startDate) {
                     $query->whereHas('order', function ($orderQuery) use ($startDate) {
@@ -60,7 +60,7 @@ class AnalyticsController extends Controller
                 ->take(5)
                 ->get();
 
-            // Tren penjualan harian (7 hari terakhir)
+            // Sales trend (last 7 days)
             $salesTrend = OrderItem::whereHas('product', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->whereHas('order', function ($query) {
@@ -92,14 +92,14 @@ class AnalyticsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data dashboard.',
+                'message' => 'Failed to fetch dashboard data.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Analisis penjualan detail.
+     * Detailed sales analytics.
      */
     public function salesAnalytics(Request $request)
     {
@@ -108,7 +108,7 @@ class AnalyticsController extends Controller
             $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
             $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
-            // Penjualan per produk
+            // Product sales
             $productSales = Product::where('user_id', $user->id)
                 ->with(['orderItems' => function ($query) use ($startDate, $endDate) {
                     $query->whereHas('order', function ($orderQuery) use ($startDate, $endDate) {
@@ -132,7 +132,7 @@ class AnalyticsController extends Controller
                     ];
                 });
 
-            // Penjualan per hari
+            // Daily sales
             $dailySales = OrderItem::whereHas('product', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->whereHas('order', function ($query) use ($startDate, $endDate) {
@@ -148,7 +148,7 @@ class AnalyticsController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            // Status pesanan
+            // Order status distribution
             $orderStatus = Order::whereHas('orderItems.product', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->whereBetween('created_at', [$startDate, $endDate])
@@ -171,14 +171,14 @@ class AnalyticsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data analisis penjualan.',
+                'message' => 'Failed to fetch sales analytics.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Analisis performa produk.
+     * Product performance analytics.
      */
     public function productPerformance(Request $request)
     {
@@ -223,21 +223,21 @@ class AnalyticsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data performa produk.',
+                'message' => 'Failed to fetch product performance data.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Analisis pelanggan.
+     * Customer analytics.
      */
     public function customerAnalytics(Request $request)
     {
         try {
             $user = $request->user();
 
-            // Top customers berdasarkan pembelian
+            // Top customers by purchase amount
             $topCustomers = DB::table('users')
                 ->join('orders', 'users.id', '=', 'orders.user_id')
                 ->join('order_items', 'orders.id', '=', 'order_items.order_id')
@@ -283,14 +283,14 @@ class AnalyticsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data analisis pelanggan.',
+                'message' => 'Failed to fetch customer analytics.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Hitung performance score untuk produk.
+     * Calculate performance score for a product.
      */
     private function calculatePerformanceScore($totalSold, $totalRevenue, $averageRating)
     {

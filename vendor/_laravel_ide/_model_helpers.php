@@ -961,10 +961,24 @@ namespace App\Models {
      *
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
+     * @property string $description
+     * @property mixed $type
+     * @property integer $points
+     * @property int $user_id
      * @property int $id
+     * @property-read \App\Models\User $user
+     * @property-read \App\Models\Order $order
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereUserId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint wherePoints($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereType($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereDescription($value)
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint whereUpdatedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint earned()
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint redeemed()
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint expired()
+     * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint forUser()
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<LoyaltyPoint>|LoyaltyPoint query()
@@ -2255,6 +2269,9 @@ namespace App\Models {
      * @property-read int|null $orderItems_count
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CartItem> $cartItems
      * @property-read int|null $cartItems_count
+     * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+     * @property-read int|null $reviews_count
+     * @property-read \App\Models\User $user
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereMerchantId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereName($value)
@@ -3563,8 +3580,6 @@ namespace App\Models {
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
      * @property int|null $order_id
-     * @property string|null $description
-     * @property string|null $type
      * @property string|null $title
      * @property float $amount
      * @property int $user_id
@@ -3576,8 +3591,6 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereAmount($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereTitle($value)
-     * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereType($value)
-     * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereDescription($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereOrderId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereUpdatedAt($value)
@@ -3890,11 +3903,15 @@ namespace App\Models {
      * @property int $product_id
      * @property int $user_id
      * @property int $id
+     * @property-read \App\Models\User $user
+     * @property-read \App\Models\Product $product
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist whereId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist whereProductId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist whereUpdatedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist forUser()
+     * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist forProduct()
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Wishlist>|Wishlist query()

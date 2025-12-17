@@ -4,58 +4,28 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
     /**
-     * Cek role user berdasarkan parameter middleware.
+     * Handle an incoming request.
      *
-     * Bisa dipakai:
-     * - role:1                    (by id)
-     * - role:admin               (by name)
-     * - role:admin,merchant      (multiple, name)
-     * - role:1,2                 (multiple, id)
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle(Request $request, Closure $next, string $role): Response
     {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
-        }
-
-        // Ambil role name & id yang dimiliki user saat ini
-        $currentRoleId   = $user->role_id;
-        $currentRoleName = optional($user->role)->name; // pastikan relasi role() ada
-
-        // Normalisasi argumen (pisah by koma jika single string)
-        if (count($roles) === 1 && Str::contains($roles[0], ',')) {
-            $roles = array_map('trim', explode(',', $roles[0]));
-        }
-
-        // Cek match oleh name atau id
-        $authorized = false;
-        foreach ($roles as $role) {
-            // Jika numeric → bandingkan role_id
-            if (is_numeric($role)) {
-                if ((int)$role === (int)$currentRoleId) {
-                    $authorized = true;
-                    break;
-                }
-            } else {
-                // Jika string → bandingkan name (lowercase)
-                if (Str::lower($role) === Str::lower((string)$currentRoleName)) {
-                    $authorized = true;
-                    break;
-                }
-            }
-        }
-
-        if (!$authorized) {
+        if (!$request->user()) {
             return response()->json([
-                'error'   => 'Forbidden',
-                'message' => 'Anda tidak memiliki role yang sesuai.'
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        if (!$request->user()->hasRole($role)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Forbidden'
             ], 403);
         }
 

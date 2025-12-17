@@ -43,6 +43,9 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'category' => 'required|string',
+            'prep_time' => 'required|integer|min:1',
+            'is_available' => 'required|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -54,11 +57,14 @@ class ProductController extends Controller
 
             $product = Product::create([
                 'merchant_id' => $request->user()->id,
-                'name' => $request->name,
-                'description' => $request->description,
-                'price' => $request->price,
-                'stock' => $request->stock,
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'price' => $request->input('price'),
+                'stock' => $request->input('stock'),
                 'image_url' => $imagePath,
+                'category' => $request->category,
+                'prep_time' => $request->prep_time,
+                'is_available' => $request->is_available,
             ]);
 
             return response()->json([

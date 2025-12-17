@@ -40,12 +40,13 @@ Route::middleware('api')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // Auth
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
+        Route::put('/password', [AuthController::class, 'changePassword']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Customer - Cart
         Route::get('/cart', [CartController::class, 'index']);
         Route::post('/cart/add/{product}', [CartController::class, 'add']);
-        Route::put('/cart/update/{item}', [CartController::class, 'updateQty']);
         Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
         Route::delete('/cart/clear', [CartController::class, 'clear']);
 

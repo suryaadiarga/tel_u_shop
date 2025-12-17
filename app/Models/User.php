@@ -49,7 +49,7 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'ewallet_balance' => 'float',
+        'wallet_balance' => 'float',
     ];
 
     // Relasi
@@ -110,5 +110,11 @@ class User extends Authenticatable
         if (!empty($value)) {
             $this->attributes['password'] = bcrypt($value);
         }
+    }
+
+    // Role helper
+    public function hasRole(string $role): bool
+    {
+        return $this->role?->name === $role;
     }
 }

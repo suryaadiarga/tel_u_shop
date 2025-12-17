@@ -88,14 +88,14 @@ class CartController extends Controller
 
             if ($cartItem) {
                 // Update quantity jika sudah ada
-                $cartItem->qty += $request->qty;
+                $cartItem->qty += $request->input('qty');
                 $cartItem->save();
             } else {
                 // Buat item baru jika belum ada
                 $cartItem = CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $productId,
-                    'qty' => $request->qty,
+                    'qty' => $request->input('qty'),
                     'price_snapshot' => $product->price,
                 ]);
             }
@@ -140,7 +140,7 @@ class CartController extends Controller
                 'qty' => 'required|integer|min:1|max:' . $cartItem->product->stock,
             ]);
 
-            $cartItem->update(['qty' => $request->qty]);
+            $cartItem->update(['qty' => $request->input('qty')]);
 
             return response()->json([
                 'status' => 'success',

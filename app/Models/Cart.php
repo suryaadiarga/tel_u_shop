@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cart extends Model
 {
-    protected $fillable = ['user_id'];
+    protected $fillable = ['user_id', 'product_id', 'quantity'];
 
     /**
      * Relasi ke user.

@@ -21,7 +21,7 @@ class UserController extends Controller
             // Filter by role if provided
             if ($request->has('role')) {
                 $query->whereHas('role', function ($q) use ($request) {
-                    $q->where('name', $request->role);
+                    $q->where('name', $request->input('role'));
                 });
             }
 
@@ -72,7 +72,7 @@ class UserController extends Controller
             ]);
 
             $user = User::findOrFail($id);
-            $role = Role::where('name', $request->role)->firstOrFail();
+            $role = Role::where('name', $request->input('role'))->firstOrFail();
 
             $user->update(['role_id' => $role->id]);
 
@@ -129,7 +129,7 @@ class UserController extends Controller
     /**
      * Aktifkan kembali user.
      */
-    public function activate($id)
+    public function activate(Request $request, $id)
     {
         try {
             $user = User::findOrFail($id);

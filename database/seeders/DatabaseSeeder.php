@@ -1,17 +1,18 @@
-<?php
-
-namespace Database\Seeders;
-
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
+public function run()
 {
-    public function run()
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            ProductSeeder::class,
-        ]);
-    }
+$this->call([
+RoleSeeder::class,
+UserSeeder::class,
+ProductSeeder::class,
+]);
+}
+=======
+public function run()
+{
+$this->call([
+RoleSeeder::class,
+UserSeeder::class,
+ProductSeeder::class,
+TestDataSeeder::class, // Add test data for API testing
+]);
 }

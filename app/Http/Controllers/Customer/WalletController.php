@@ -47,7 +47,7 @@ class WalletController extends Controller
             DB::beginTransaction();
 
             $user = $request->user();
-            $amount = (int) $request->amount;
+            $amount = (int) $request->input('amount');
 
             // Tambah saldo user
             $user->increment('wallet_balance', $amount);

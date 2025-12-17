@@ -20,7 +20,7 @@ class OrderController extends Controller
 
             $orders = Order::with(['items.product', 'user'])
                 ->whereHas('items.product', function ($query) use ($merchantId) {
-                    $query->where('merchant_id', $merchantId);
+                    $query->where('user_id', $merchantId);
                 })
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -47,7 +47,7 @@ class OrderController extends Controller
             $merchantId = $request->user()->id;
 
             $request->validate([
-                'status' => 'required|in:pending,paid,shipped,completed,cancelled'
+                'status' => 'required|in:pending,processing,paid,shipped,completed,cancelled'
             ]);
 
             // Verify merchant ownership - check if merchant has products in this order
@@ -55,7 +55,7 @@ class OrderController extends Controller
 
             $hasAccess = $order->items()
                 ->whereHas('product', function ($query) use ($merchantId) {
-                    $query->where('merchant_id', $merchantId);
+                    $query->where('user_id', $merchantId);
                 })
                 ->exists();
 
@@ -67,7 +67,7 @@ class OrderController extends Controller
             }
 
             $order->update([
-                'status' => $request->status
+                'status' => $request->input('status')
             ]);
 
             return response()->json([

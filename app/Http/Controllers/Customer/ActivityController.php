@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Review;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -25,21 +26,21 @@ class ActivityController extends Controller
                 ->where('user_id', $user->id);
 
             // 1. Filter berdasarkan status (pending, completed, cancelled, dsb)
-            if ($request->has('status') && $request->status !== 'all') {
-                $query->where('status', $request->status);
+            if ($request->has('status') && $request->input('status') !== 'all') {
+                $query->where('status', $request->input('status'));
             }
 
             // 2. Filter berdasarkan rentang tanggal
             if ($request->has('start_date') && $request->has('end_date')) {
                 $query->whereBetween('created_at', [
-                    $request->start_date . ' 00:00:00',
-                    $request->end_date . ' 23:59:59'
+                    $request->input('start_date') . ' 00:00:00',
+                    $request->input('end_date') . ' 23:59:59'
                 ]);
             }
 
             // 3. Pencarian berdasarkan Nama Produk atau ID Pesanan
             if ($request->has('search')) {
-                $search = $request->search;
+                $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('id', 'LIKE', "%{$search}%")
                         ->orWhereHas('items.product', function ($sq) use ($search) {
@@ -275,8 +276,8 @@ class ActivityController extends Controller
                 'user_id' => $user->id,
                 'product_id' => $orderItem->product_id,
                 'order_item_id' => $orderItemId,
-                'rating' => $request->rating,
-                'comment' => $request->comment,
+                'rating' => $request->input('rating'),
+                'comment' => $request->input('comment'),
             ]);
 
             return response()->json([
@@ -303,11 +304,22 @@ class ActivityController extends Controller
             $order = Order::with('items')->where('user_id', $user->id)->where('id', $id)->firstOrFail();
 
             foreach ($order->items as $item) {
-                // Tambahkan ke keranjang (Asumsi menggunakan model Cart)
-                Cart::updateOrCreate(
-                    ['user_id' => $user->id, 'product_id' => $item->product_id],
-                    ['quantity' => $item->qty]
-                );
+                // Tambahkan ke keranjang (Asumsi menggunakan model CartItem)
+                $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+                $cartItem = CartItem::where('cart_id', $cart->id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if ($cartItem) {
+                    $cartItem->increment('qty', $item->qty);
+                } else {
+                    CartItem::create([
+                        'cart_id' => $cart->id,
+                        'product_id' => $item->product_id,
+                        'qty' => $item->qty,
+                        'price_snapshot' => $item->price
+                    ]);
+                }
             }
 
             return response()->json([

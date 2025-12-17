@@ -20,8 +20,12 @@ class AuthController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'nim'      => 'required|string|max:255',
+            'kelas'    => 'required|string|max:255',
+            'phone'    => 'required|string|max:255',
             'role'     => 'required|in:1,2,3', // 1:Admin, 2:Merchant, 3:Customer
         ]);
 
@@ -29,10 +33,14 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
-                'password' => $request->password,
-                'role_id'  => $request->role,
+                'name'      => $request->input('name'),
+                'username'  => $request->input('username'),
+                'email'     => $request->input('email'),
+                'password'  => $request->input('password'),
+                'nim'       => $request->input('nim'),
+                'kelas'     => $request->input('kelas'),
+                'phone'     => $request->input('phone'),
+                'role_id'   => $request->input('role'),
             ]);
 
             // Inisialisasi saldo awal atau profil tambahan jika diperlukan
@@ -73,9 +81,9 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->input('email'))->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Kredensial tidak valid.'
@@ -84,7 +92,9 @@ class AuthController extends Controller
 
         // Keamanan: Hapus token lama agar hanya ada satu sesi aktif
         // Menggunakan delete() method yang tersedia dari HasApiTokens trait
-        $user->tokens()->delete();
+        $user->tokens->each(function ($token) {
+            $token->delete();
+        });
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -154,7 +164,7 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (!Hash::check($request->input('current_password'), $user->password)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Kata sandi saat ini tidak cocok.'
@@ -162,7 +172,7 @@ class AuthController extends Controller
         }
 
         $user->update([
-            'password' => Hash::make($request->new_password)
+            'password' => Hash::make($request->input('new_password'))
         ]);
 
         return response()->json([
@@ -177,7 +187,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $request->user()->currentAccessToken()->delete();
+            $request->user()->tokens()->delete();
 
             return response()->json([
                 'status'  => 'success',
