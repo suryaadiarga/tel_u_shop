@@ -9,7 +9,7 @@ use App\Http\Controllers\StudentCardController;
 use App\Http\Controllers\RedirectController;
 
 // Home
-Route::get('/', [HomeController::class, 'index'])->name('home');
+//Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // QR Scanner
 Route::get('/qr-scanner', [QrController::class, 'index'])->name('qr.scanner.page');
