@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\QueryService;
 use Exception;
 
 class UserController extends Controller
@@ -25,7 +26,27 @@ class UserController extends Controller
                 });
             }
 
-            $users = $query->orderBy('created_at', 'desc')->get();
+            if ($request->filled('merchant_status')) {
+                $query->where('merchant_status', $request->input('merchant_status'));
+            }
+
+            if ($request->has('is_banned')) {
+                $query->where('is_banned', filter_var($request->input('is_banned'), FILTER_VALIDATE_BOOLEAN));
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('username', 'like', '%' . $search . '%');
+                });
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['name', 'email', 'created_at']);
+
+            $users = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',
@@ -144,6 +165,101 @@ class UserController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal mengaktifkan user.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve merchant account.
+     */
+    public function approveMerchant(Request $request, $id)
+    {
+        try {
+            $user = User::with('role')->findOrFail($id);
+
+            if (!$user->isMerchant()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User bukan merchant.'
+                ], 422);
+            }
+
+            $user->update([
+                'merchant_status' => 'approved',
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Merchant berhasil disetujui.',
+                'data' => $user
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyetujui merchant.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Ban user (merchant or customer).
+     */
+    public function ban(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $currentUser = $request->user();
+
+            if ($user->id === $currentUser->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak dapat memblokir akun Anda sendiri.'
+                ], 400);
+            }
+
+            $user->update([
+                'is_banned' => true,
+                'banned_at' => now(),
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User berhasil diblokir.',
+                'data' => $user
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memblokir user.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Unban user.
+     */
+    public function unban(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $user->update([
+                'is_banned' => false,
+                'banned_at' => null,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User berhasil diaktifkan kembali.',
+                'data' => $user
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membuka blokir user.',
                 'error' => $e->getMessage()
             ], 500);
         }

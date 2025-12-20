@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\LoyaltyPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Actions\Checkout\CreateOrderItems;
 
 class CheckoutController extends Controller
 {
@@ -39,6 +39,28 @@ class CheckoutController extends Controller
 
             $totalAmount = $cart->total();
 
+            foreach ($cart->items as $cartItem) {
+                $product = $cartItem->product;
+                if (!$product) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Produk tidak ditemukan dalam cart.'
+                    ], 422);
+                }
+                if (!$product->is_available || $product->stock <= 0 || $cartItem->qty > $product->stock) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Stok produk tidak mencukupi.'
+                    ], 422);
+                }
+                if ($product->merchant && (!$product->merchant->isMerchantApproved() || $product->merchant->isBanned())) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Merchant belum disetujui atau diblokir.'
+                    ], 422);
+                }
+            }
+
             // Check wallet balance if paying with wallet
             if ($request->payment_method === 'wallet') {
                 if ($user->wallet_balance < $totalAmount) {
@@ -59,17 +81,7 @@ class CheckoutController extends Controller
             ]);
 
             // Create order items
-            foreach ($cart->items as $cartItem) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'quantity' => $cartItem->qty,
-                    'price_snapshot' => $cartItem->price_snapshot,
-                ]);
-
-                // Decrease product stock
-                $cartItem->product->decrement('stock', $cartItem->qty);
-            }
+            (new CreateOrderItems())->execute($order, $cart->items);
 
             // Deduct from wallet if paying with wallet
             if ($request->payment_method === 'wallet') {
@@ -80,7 +92,6 @@ class CheckoutController extends Controller
                     'type' => 'payment',
                     'amount' => -$totalAmount,
                     'description' => 'Payment for order #' . $order->id,
-                    'status' => 'completed'
                 ]);
             }
 

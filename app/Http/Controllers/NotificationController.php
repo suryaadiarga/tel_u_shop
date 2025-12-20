@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Notification;
+use App\Services\QueryService;
 use Exception;
 
 class NotificationController extends Controller
@@ -15,9 +16,20 @@ class NotificationController extends Controller
     {
         try {
             $user = $request->user();
-            $notifications = Notification::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(20);
+            $query = Notification::where('user_id', $user->id);
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+
+            if ($request->has('is_read')) {
+                $query->where('is_read', filter_var($request->input('is_read'), FILTER_VALIDATE_BOOLEAN));
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'type']);
+
+            $notifications = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',

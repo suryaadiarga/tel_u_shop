@@ -10,6 +10,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Services\QueryService;
 use Exception;
 
 class ActivityController extends Controller
@@ -57,9 +58,10 @@ class ActivityController extends Controller
                 'total_spent' => Order::where('user_id', $user->id)->where('status', 'completed')->sum('total_amount'),
             ];
 
-            // 5. Paginasi
-            $perPage = $request->get('per_page', 10);
-            $orders = $query->orderBy('created_at', 'desc')->paginate($perPage);
+            // 5. Paginasi dan sorting
+            $perPage = QueryService::perPage($request, 10);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'total_amount', 'status']);
+            $orders = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',
@@ -82,7 +84,7 @@ class ActivityController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $order = Order::with(['items.product.user', 'items.review'])
+            $order = Order::with(['items.product.merchant'])
                 ->where('user_id', $request->user()->id)
                 ->where('id', $id)
                 ->firstOrFail();
@@ -201,18 +203,20 @@ class ActivityController extends Controller
                 }
             }
 
-            // 2. Kembalikan saldo Wallet
-            $user->increment('wallet_balance', $order->total_amount);
+            // 2. Kembalikan saldo Wallet jika pembayaran via wallet
+            if ($order->payment_method === 'wallet') {
+                $user->increment('wallet_balance', $order->total_amount);
 
-            // 3. Catat transaksi pengembalian dana (Refund)
-            WalletTransaction::create([
-                'user_id' => $user->id,
-                'type' => 'topup',
-                'amount' => $order->total_amount,
-                'title' => 'Refund Pembatalan Pesanan',
-                'description' => 'Pengembalian dana untuk pesanan #' . $order->id,
-                'order_id' => $order->id,
-            ]);
+                // 3. Catat transaksi pengembalian dana (Refund)
+                WalletTransaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'topup',
+                    'amount' => $order->total_amount,
+                    'title' => 'Refund Pembatalan Pesanan',
+                    'description' => 'Pengembalian dana untuk pesanan #' . $order->id,
+                    'order_id' => $order->id,
+                ]);
+            }
 
             // 4. Update status pesanan menjadi cancelled
             $order->update(['status' => 'cancelled']);

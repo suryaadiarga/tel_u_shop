@@ -41,6 +41,7 @@ class Kernel extends HttpKernel
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
+            \App\Http\Middleware\TransformApiResponse::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -64,6 +65,7 @@ class Kernel extends HttpKernel
 
         // Role alias → supports both name and id
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'not-banned' => \App\Http\Middleware\EnsureNotBanned::class,
     ];
 
     /**
@@ -74,5 +76,6 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'not-banned' => \App\Http\Middleware\EnsureNotBanned::class,
     ];
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Services\QueryService;
 use Exception;
 
 class WalletController extends Controller
@@ -89,9 +90,16 @@ class WalletController extends Controller
         try {
             $user = $request->user();
 
-            $transactions = WalletTransaction::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(20);
+            $query = WalletTransaction::where('user_id', $user->id);
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'amount', 'type']);
+
+            $transactions = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',

@@ -25,11 +25,12 @@ class AuthController extends Controller
             'nim'      => 'required|string|max:255',
             'kelas'    => 'required|string|max:255',
             'phone'    => 'required|string|max:255',
-            'role'     => 'required|in:1,2,3',
+            'role'     => 'required|in:2,3',
         ]);
 
         DB::beginTransaction();
         try {
+            $merchantStatus = $request->role == 2 ? 'pending' : 'approved';
             $user = User::create([
                 'name'     => $request->name,
                 'username' => $request->username,
@@ -39,6 +40,7 @@ class AuthController extends Controller
                 'kelas'    => $request->kelas,
                 'phone'    => $request->phone,
                 'role_id'  => $request->role,
+                'merchant_status' => $merchantStatus,
             ]);
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -83,6 +85,13 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if ($user->isBanned()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Akun diblokir.'
+            ], 403);
+        }
+
         // hapus token lama
         $user->tokens()->delete();
 
@@ -106,7 +115,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'data'   => $request->user()
+            'data'   => $request->user()->load('role')
         ]);
     }
 

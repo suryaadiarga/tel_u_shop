@@ -38,66 +38,68 @@ Route::middleware('api')->group(function () {
     | Authenticated Routes
     |--------------------------------------------------------------------------
     */
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'not-banned'])->group(function () {
         // Auth
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
         Route::put('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
-        // Customer - Cart
-        Route::get('/cart', [CartController::class, 'index']);
-        Route::post('/cart/add/{product}', [CartController::class, 'add']);
-        Route::put('/cart/update/{item}', [CartController::class, 'updateQty']);
-        Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
-        Route::delete('/cart/clear', [CartController::class, 'clear']);
+        Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':customer')->group(function () {
+            // Customer - Cart
+            Route::get('/cart', [CartController::class, 'index']);
+            Route::post('/cart/add/{product}', [CartController::class, 'add']);
+            Route::put('/cart/update/{item}', [CartController::class, 'updateQty']);
+            Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
+            Route::delete('/cart/clear', [CartController::class, 'clear']);
 
-        // Customer - Checkout
-        Route::post('/checkout', [CheckoutController::class, 'store']);
+            // Customer - Checkout
+            Route::post('/checkout', [CheckoutController::class, 'store']);
 
-        // Customer - Wallet
-        Route::get('/wallet/balance', [WalletController::class, 'balance']);
-        Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
-        Route::post('/wallet/topup', [WalletController::class, 'topup']);
+            // Customer - Wallet
+            Route::get('/wallet/balance', [WalletController::class, 'balance']);
+            Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+            Route::post('/wallet/topup', [WalletController::class, 'topup']);
 
-        // Customer - Activity
-        Route::get('/activities', [ActivityController::class, 'index']);
-        Route::get('/activities/{id}', [ActivityController::class, 'show']);
-        Route::get('/activities/{id}/track', [ActivityController::class, 'track']);
+            // Customer - Activity
+            Route::get('/activities', [ActivityController::class, 'index']);
+            Route::get('/activities/{id}', [ActivityController::class, 'show']);
+            Route::get('/activities/{id}/track', [ActivityController::class, 'track']);
 
-        // Customer - Wishlist
-        Route::get('/wishlist', [WishlistController::class, 'index']);
-        Route::post('/wishlist/add/{product}', [WishlistController::class, 'add']);
-        Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove']);
-        Route::get('/wishlist/check/{product}', [WishlistController::class, 'check']);
+            // Customer - Wishlist
+            Route::get('/wishlist', [WishlistController::class, 'index']);
+            Route::post('/wishlist/add/{product}', [WishlistController::class, 'add']);
+            Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove']);
+            Route::get('/wishlist/check/{product}', [WishlistController::class, 'check']);
 
-        // Customer - Products
-        Route::get('/products', [CustomerProductController::class, 'index']);
-        Route::get('/products/{id}', [CustomerProductController::class, 'show']);
-        Route::get('/products/categories', [CustomerProductController::class, 'categories']);
+            // Customer - Products
+            Route::get('/products', [CustomerProductController::class, 'index']);
+            Route::get('/products/{id}', [CustomerProductController::class, 'show']);
+            Route::get('/products/categories', [CustomerProductController::class, 'categories']);
 
-        // Customer - Reviews
-        Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
-        Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
-        Route::get('/reviews/{review}', [ReviewController::class, 'show']);
-        Route::put('/reviews/{review}', [ReviewController::class, 'update']);
-        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
-        Route::get('/my-reviews', [ReviewController::class, 'myReviews']);
+            // Customer - Reviews
+            Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
+            Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+            Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+            Route::put('/reviews/{review}', [ReviewController::class, 'update']);
+            Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+            Route::get('/my-reviews', [ReviewController::class, 'myReviews']);
 
-        // Customer - Loyalty Points
-        Route::get('/loyalty/balance', [LoyaltyController::class, 'balance']);
-        Route::get('/loyalty/history', [LoyaltyController::class, 'history']);
-        Route::post('/loyalty/redeem', [LoyaltyController::class, 'redeem']);
-        Route::get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
+            // Customer - Loyalty Points
+            Route::get('/loyalty/balance', [LoyaltyController::class, 'balance']);
+            Route::get('/loyalty/history', [LoyaltyController::class, 'history']);
+            Route::post('/loyalty/redeem', [LoyaltyController::class, 'redeem']);
+            Route::get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
 
-        // Customer - Notifications
-        Route::get('/notifications', [NotificationController::class, 'index']);
-        Route::get('/notifications/stats', [NotificationController::class, 'stats']);
-        Route::get('/notifications/{id}', [NotificationController::class, 'show']);
-        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-        Route::put('/notifications/mark-read', [NotificationController::class, 'markMultipleAsRead']);
-        Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+            // Customer - Notifications
+            Route::get('/notifications', [NotificationController::class, 'index']);
+            Route::get('/notifications/stats', [NotificationController::class, 'stats']);
+            Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+            Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+            Route::put('/notifications/mark-read', [NotificationController::class, 'markMultipleAsRead']);
+            Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+            Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+        });
 
         /*
         |--------------------------------------------------------------------------
@@ -139,6 +141,9 @@ Route::middleware('api')->group(function () {
             Route::put('/admin/users/{id}/role', [AdminUserController::class, 'updateRole']);
             Route::put('/admin/users/{id}/deactivate', [AdminUserController::class, 'deactivate']);
             Route::put('/admin/users/{id}/activate', [AdminUserController::class, 'activate']);
+            Route::put('/admin/merchants/{id}/approve', [AdminUserController::class, 'approveMerchant']);
+            Route::put('/admin/users/{id}/ban', [AdminUserController::class, 'ban']);
+            Route::put('/admin/users/{id}/unban', [AdminUserController::class, 'unban']);
         });
     });
 });

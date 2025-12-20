@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LoyaltyPoint;
-use App\Models\User;
+use App\Services\QueryService;
 use Exception;
 
 class LoyaltyController extends Controller
@@ -44,9 +44,16 @@ class LoyaltyController extends Controller
         try {
             $user = $request->user();
 
-            $history = LoyaltyPoint::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(20);
+            $query = LoyaltyPoint::where('user_id', $user->id);
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'points', 'type']);
+
+            $history = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',

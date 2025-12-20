@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use App\Services\QueryService;
 
 class ReviewController extends Controller
 {
@@ -14,7 +15,13 @@ class ReviewController extends Controller
      */
     public function index(Request $request, Product $product)
     {
-        $reviews = $product->reviews()->with('user:id,name')->latest()->get();
+        $perPage = QueryService::perPage($request);
+        [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'rating']);
+
+        $reviews = $product->reviews()
+            ->with('user:id,name')
+            ->orderBy($sortBy, $sortOrder)
+            ->paginate($perPage);
 
         return response()->json([
             'status' => 'success',
@@ -61,13 +68,7 @@ class ReviewController extends Controller
      */
     public function show(Request $request, Review $review)
     {
-        // Check if user owns this review
-        if ($review->user_id !== $request->user()->id) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized'
-            ], 403);
-        }
+        $this->authorize('view', $review);
 
         return response()->json([
             'status' => 'success',
@@ -80,13 +81,7 @@ class ReviewController extends Controller
      */
     public function update(Request $request, Review $review)
     {
-        // Check if user owns this review
-        if ($review->user_id !== $request->user()->id) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized'
-            ], 403);
-        }
+        $this->authorize('update', $review);
 
         $request->validate([
             'rating' => 'sometimes|integer|min:1|max:5',
@@ -107,13 +102,7 @@ class ReviewController extends Controller
      */
     public function destroy(Request $request, Review $review)
     {
-        // Check if user owns this review
-        if ($review->user_id !== $request->user()->id) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized'
-            ], 403);
-        }
+        $this->authorize('delete', $review);
 
         $review->delete();
 
@@ -128,7 +117,13 @@ class ReviewController extends Controller
      */
     public function myReviews(Request $request)
     {
-        $reviews = $request->user()->reviews()->with('product:id,name')->latest()->get();
+        $perPage = QueryService::perPage($request);
+        [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'rating']);
+
+        $reviews = $request->user()->reviews()
+            ->with('product:id,name')
+            ->orderBy($sortBy, $sortOrder)
+            ->paginate($perPage);
 
         return response()->json([
             'status' => 'success',

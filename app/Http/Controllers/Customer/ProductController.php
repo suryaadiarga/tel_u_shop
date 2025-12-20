@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Services\QueryService;
 
 class ProductController extends Controller
 {
@@ -14,9 +15,13 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Product::with('user:id,name')
+            $query = Product::with('merchant:id,name')
                 ->where('is_available', true)
-                ->where('stock', '>', 0);
+                ->where('stock', '>', 0)
+                ->whereHas('merchant', function ($merchantQuery) {
+                    $merchantQuery->where('merchant_status', 'approved')
+                        ->where('is_banned', false);
+                });
 
             // Filter berdasarkan kategori jika ada
             if ($request->has('category') && $request->category) {
@@ -28,17 +33,10 @@ class ProductController extends Controller
                 $query->where('name', 'like', '%' . $request->search . '%');
             }
 
-            // Sorting
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['name', 'price', 'created_at']);
 
-            if (in_array($sortBy, ['name', 'price', 'created_at'])) {
-                $query->orderBy($sortBy, $sortOrder);
-            }
-
-            // Pagination
-            $perPage = $request->get('per_page', 20);
-            $products = $query->paginate($perPage);
+            $products = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             // Format response
             $formattedProducts = $products->getCollection()->map(function ($product) {
@@ -53,9 +51,9 @@ class ProductController extends Controller
                     'prep_time' => $product->prep_time,
                     'image_url' => $product->image_url,
                     'category' => $product->category,
-                    'merchant' => $product->user ? [
-                        'id' => $product->user->id,
-                        'name' => $product->user->name,
+                    'merchant' => $product->merchant ? [
+                        'id' => $product->merchant->id,
+                        'name' => $product->merchant->name,
                     ] : null,
                     'created_at' => $product->created_at,
                 ];
@@ -82,9 +80,13 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with('user:id,name')
+            $product = Product::with('merchant:id,name')
                 ->where('is_available', true)
                 ->where('stock', '>', 0)
+                ->whereHas('merchant', function ($merchantQuery) {
+                    $merchantQuery->where('merchant_status', 'approved')
+                        ->where('is_banned', false);
+                })
                 ->findOrFail($id);
 
             return response()->json([
@@ -100,9 +102,9 @@ class ProductController extends Controller
                     'prep_time' => $product->prep_time,
                     'image_url' => $product->image_url,
                     'category' => $product->category,
-                    'merchant' => $product->user ? [
-                        'id' => $product->user->id,
-                        'name' => $product->user->name,
+                    'merchant' => $product->merchant ? [
+                        'id' => $product->merchant->id,
+                        'name' => $product->merchant->name,
                     ] : null,
                     'created_at' => $product->created_at,
                     'updated_at' => $product->updated_at,
@@ -125,6 +127,10 @@ class ProductController extends Controller
         try {
             $categories = Product::where('is_available', true)
                 ->where('stock', '>', 0)
+                ->whereHas('merchant', function ($merchantQuery) {
+                    $merchantQuery->where('merchant_status', 'approved')
+                        ->where('is_banned', false);
+                })
                 ->whereNotNull('category')
                 ->distinct()
                 ->pluck('category')

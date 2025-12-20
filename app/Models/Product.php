@@ -13,12 +13,14 @@ class Product extends Model
 
     protected $fillable = [
         'user_id',
+        'merchant_id',
         'name',
         'description',
         'price',
         'stock',
         'image_url',
         'category',
+        'category_id',
         'prep_time',
         'is_available',
     ];
@@ -48,6 +50,16 @@ class Product extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function merchant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'merchant_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function getStockStatusAttribute(): string

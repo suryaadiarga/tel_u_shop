@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
+use App\Services\QueryService;
 
 class WishlistController extends Controller
 {
@@ -14,7 +15,19 @@ class WishlistController extends Controller
      */
     public function index(Request $request)
     {
-        $wishlist = $request->user()->wishlists()->with('product')->get();
+        $query = $request->user()->wishlists()->with(['product.merchant']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('product', function ($productQuery) use ($search) {
+                $productQuery->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $perPage = QueryService::perPage($request);
+        [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at']);
+
+        $wishlist = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
         return response()->json([
             'status' => 'success',
@@ -27,6 +40,20 @@ class WishlistController extends Controller
      */
     public function add(Request $request, Product $product)
     {
+        if (!$product->is_available || $product->stock <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Produk tidak tersedia.'
+            ], 422);
+        }
+
+        if ($product->merchant && (!$product->merchant->isMerchantApproved() || $product->merchant->isBanned())) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Merchant belum disetujui atau diblokir.'
+            ], 422);
+        }
+
         // Check if already in wishlist
         $existing = $request->user()->wishlists()->where('product_id', $product->id)->first();
 

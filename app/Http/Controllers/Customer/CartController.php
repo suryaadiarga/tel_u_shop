@@ -70,7 +70,14 @@ class CartController extends Controller
     public function add(Request $request, $productId)
     {
         try {
-            $product = Product::findOrFail($productId);
+            $product = Product::where('id', $productId)
+                ->where('is_available', true)
+                ->where('stock', '>', 0)
+                ->whereHas('merchant', function ($merchantQuery) {
+                    $merchantQuery->where('merchant_status', 'approved')
+                        ->where('is_banned', false);
+                })
+                ->firstOrFail();
 
             $request->validate([
                 'qty' => 'required|integer|min:1|max:' . $product->stock,
@@ -87,8 +94,16 @@ class CartController extends Controller
                 ->first();
 
             if ($cartItem) {
+                $newQty = $cartItem->qty + $request->input('qty');
+                if ($newQty > $product->stock) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Jumlah melebihi stok tersedia.'
+                    ], 422);
+                }
+
                 // Update quantity jika sudah ada
-                $cartItem->qty += $request->input('qty');
+                $cartItem->qty = $newQty;
                 $cartItem->save();
             } else {
                 // Buat item baru jika belum ada
@@ -136,8 +151,23 @@ class CartController extends Controller
                 ], 403);
             }
 
+            $product = $cartItem->product;
+            if (!$product || !$product->is_available || $product->stock <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Produk tidak tersedia.'
+                ], 422);
+            }
+
+            if ($product->merchant && (!$product->merchant->isMerchantApproved() || $product->merchant->isBanned())) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Merchant belum disetujui atau diblokir.'
+                ], 422);
+            }
+
             $request->validate([
-                'qty' => 'required|integer|min:1|max:' . $cartItem->product->stock,
+                'qty' => 'required|integer|min:1|max:' . $product->stock,
             ]);
 
             $cartItem->update(['qty' => $request->input('qty')]);

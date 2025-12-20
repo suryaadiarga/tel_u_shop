@@ -6,33 +6,28 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class RoleMiddleware
+class EnsureNotBanned
 {
     /**
-     * Handle an incoming request.
+     * Block access for banned users.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+
+        if (!$user) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized'
             ], 401);
         }
 
-        if (!$request->user()->hasRole($role)) {
+        if ($user->isBanned()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Forbidden'
-            ], 403);
-        }
-
-        if ($role === 'merchant' && !$request->user()->isMerchantApproved()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Merchant belum disetujui.'
+                'message' => 'Akun diblokir.'
             ], 403);
         }
 

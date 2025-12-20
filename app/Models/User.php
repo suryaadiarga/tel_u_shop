@@ -36,6 +36,9 @@ class User extends Authenticatable
         'wallet_balance',
         'role_id',
         'student_id',
+        'merchant_status',
+        'is_banned',
+        'banned_at',
     ];
 
     /**
@@ -51,6 +54,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'wallet_balance' => 'float',
+        'is_banned' => 'boolean',
+        'banned_at' => 'datetime',
     ];
 
     /*
@@ -74,6 +79,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'merchant_id');
+    }
+
     public function cart(): HasOne
     {
         return $this->hasOne(Cart::class);
@@ -92,6 +102,11 @@ class User extends Authenticatable
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     /*
@@ -118,5 +133,15 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->role?->name === $role;
+    }
+
+    public function isBanned(): bool
+    {
+        return (bool) $this->is_banned;
+    }
+
+    public function isMerchantApproved(): bool
+    {
+        return $this->isMerchant() && $this->merchant_status === 'approved';
     }
 }

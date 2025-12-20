@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Merchant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Services\QueryService;
 use Exception;
 
 class OrderController extends Controller
@@ -18,12 +18,38 @@ class OrderController extends Controller
         try {
             $merchantId = $request->user()->id;
 
-            $orders = Order::with(['items.product', 'user'])
-                ->whereHas('items.product', function ($query) use ($merchantId) {
-                    $query->where('user_id', $merchantId);
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Order::with([
+                'items' => function ($query) use ($merchantId) {
+                    $query->whereHas('product', function ($productQuery) use ($merchantId) {
+                        $productQuery->where('merchant_id', $merchantId);
+                    });
+                },
+                'items.product',
+                'user',
+            ])->whereHas('items.product', function ($query) use ($merchantId) {
+                $query->where('merchant_id', $merchantId);
+            });
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $query->whereBetween('created_at', [
+                    $request->input('start_date') . ' 00:00:00',
+                    $request->input('end_date') . ' 23:59:59',
+                ]);
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where('id', 'like', '%' . $search . '%');
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'status', 'total_amount']);
+
+            $orders = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',
@@ -55,7 +81,7 @@ class OrderController extends Controller
 
             $hasAccess = $order->items()
                 ->whereHas('product', function ($query) use ($merchantId) {
-                    $query->where('user_id', $merchantId);
+                    $query->where('merchant_id', $merchantId);
                 })
                 ->exists();
 

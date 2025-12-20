@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
+use App\Services\QueryService;
 use Exception;
 
 class ProductController extends Controller
@@ -16,9 +17,25 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $products = Product::where('merchant_id', $request->user()->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Product::where('merchant_id', $request->user()->id);
+
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where('name', 'like', '%' . $search . '%');
+            }
+
+            if ($request->filled('category')) {
+                $query->where('category', $request->input('category'));
+            }
+
+            if ($request->has('is_available')) {
+                $query->where('is_available', filter_var($request->input('is_available'), FILTER_VALIDATE_BOOLEAN));
+            }
+
+            $perPage = QueryService::perPage($request);
+            [$sortBy, $sortOrder] = QueryService::sort($request, ['name', 'price', 'stock', 'created_at']);
+
+            $products = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',
@@ -101,7 +118,7 @@ class ProductController extends Controller
         try {
             if ($request->hasFile('image')) {
                 if ($product->image_url) {
-                    Storage::delete($product->image_url);
+                    Storage::disk('public')->delete($product->image_url);
                 }
                 $product->image_url = $request->file('image')->store('products', 'public');
             }
@@ -133,7 +150,7 @@ class ProductController extends Controller
                 ->firstOrFail();
 
             if ($product->image_url) {
-                Storage::delete($product->image_url);
+                Storage::disk('public')->delete($product->image_url);
             }
 
             $product->delete();

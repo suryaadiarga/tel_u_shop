@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Services\QueryService;
 
 class OrderController extends Controller
 {
@@ -37,7 +38,10 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate(15);
+        $perPage = QueryService::perPage($request, 15);
+        [$sortBy, $sortOrder] = QueryService::sort($request, ['created_at', 'status', 'total_amount']);
+
+        $orders = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
         return response()->json([
             'status' => 'success',

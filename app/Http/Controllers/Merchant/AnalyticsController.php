@@ -25,51 +25,51 @@ class AnalyticsController extends Controller
             $startDate = Carbon::now()->subDays($period);
 
             // Total products
-            $totalProducts = Product::where('user_id', $user->id)->count();
+            $totalProducts = Product::where('merchant_id', $user->id)->count();
 
             // Total sales
             $totalSales = OrderItem::whereHas('product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('merchant_id', $user->id);
             })->whereHas('order', function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate)
                     ->where('status', 'completed');
-            })->sum('quantity');
+            })->sum('qty');
 
             // Total revenue
             $totalRevenue = OrderItem::whereHas('product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('merchant_id', $user->id);
             })->whereHas('order', function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate)
                     ->where('status', 'completed');
-            })->sum(DB::raw('quantity * price_snapshot'));
+            })->sum(DB::raw('qty * price'));
 
             // Average rating of products
             $averageRating = Review::whereHas('product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('merchant_id', $user->id);
             })->avg('rating') ?? 0;
 
             // Top products
-            $topProducts = Product::where('user_id', $user->id)
-                ->withCount(['orderItems as total_sold' => function ($query) use ($startDate) {
+            $topProducts = Product::where('merchant_id', $user->id)
+                ->withSum(['orderItems as total_sold' => function ($query) use ($startDate) {
                     $query->whereHas('order', function ($orderQuery) use ($startDate) {
                         $orderQuery->where('created_at', '>=', $startDate)
                             ->where('status', 'completed');
                     });
-                }])
+                }], 'qty')
                 ->orderBy('total_sold', 'desc')
                 ->take(5)
                 ->get();
 
             // Sales trend (last 7 days)
             $salesTrend = OrderItem::whereHas('product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('merchant_id', $user->id);
             })->whereHas('order', function ($query) {
                 $query->where('created_at', '>=', Carbon::now()->subDays(7))
                     ->where('status', 'completed');
             })->select(
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(quantity) as total_quantity'),
-                DB::raw('SUM(quantity * price_snapshot) as total_revenue')
+                DB::raw('SUM(qty) as total_quantity'),
+                DB::raw('SUM(qty * price) as total_revenue')
             )
                 ->groupBy('date')
                 ->orderBy('date')
@@ -109,15 +109,15 @@ class AnalyticsController extends Controller
             $endDate = $request->get('end_date', Carbon::now()->toDateString());
 
             // Product sales
-            $productSales = Product::where('user_id', $user->id)
+            $productSales = Product::where('merchant_id', $user->id)
                 ->with(['orderItems' => function ($query) use ($startDate, $endDate) {
                     $query->whereHas('order', function ($orderQuery) use ($startDate, $endDate) {
                         $orderQuery->whereBetween('created_at', [$startDate, $endDate])
                             ->where('status', 'completed');
                     })->select(
                         'product_id',
-                        DB::raw('SUM(quantity) as total_quantity'),
-                        DB::raw('SUM(quantity * price_snapshot) as total_revenue')
+                        DB::raw('SUM(qty) as total_quantity'),
+                        DB::raw('SUM(qty * price) as total_revenue')
                     )->groupBy('product_id');
                 }])
                 ->get()
@@ -134,14 +134,14 @@ class AnalyticsController extends Controller
 
             // Daily sales
             $dailySales = OrderItem::whereHas('product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('merchant_id', $user->id);
             })->whereHas('order', function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('created_at', [$startDate, $endDate])
                     ->where('status', 'completed');
             })->select(
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(quantity) as total_quantity'),
-                DB::raw('SUM(quantity * price_snapshot) as total_revenue'),
+                DB::raw('SUM(qty) as total_quantity'),
+                DB::raw('SUM(qty * price) as total_revenue'),
                 DB::raw('COUNT(DISTINCT order_id) as total_orders')
             )
                 ->groupBy('date')
@@ -149,8 +149,8 @@ class AnalyticsController extends Controller
                 ->get();
 
             // Order status distribution
-            $orderStatus = Order::whereHas('orderItems.product', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+            $orderStatus = Order::whereHas('items.product', function ($query) use ($user) {
+                $query->where('merchant_id', $user->id);
             })->whereBetween('created_at', [$startDate, $endDate])
                 ->select('status', DB::raw('COUNT(*) as count'))
                 ->groupBy('status')
@@ -185,7 +185,7 @@ class AnalyticsController extends Controller
         try {
             $user = $request->user();
 
-            $products = Product::where('user_id', $user->id)
+            $products = Product::where('merchant_id', $user->id)
                 ->with(['reviews', 'orderItems' => function ($query) {
                     $query->whereHas('order', function ($orderQuery) {
                         $orderQuery->where('status', 'completed');
@@ -193,9 +193,9 @@ class AnalyticsController extends Controller
                 }])
                 ->get()
                 ->map(function ($product) {
-                    $totalSold = $product->orderItems->sum('quantity');
+                    $totalSold = $product->orderItems->sum('qty');
                     $totalRevenue = $product->orderItems->sum(function ($item) {
-                        return $item->quantity * $item->price_snapshot;
+                        return $item->qty * $item->price;
                     });
                     $averageRating = $product->reviews->avg('rating') ?? 0;
                     $reviewCount = $product->reviews->count();
@@ -242,15 +242,15 @@ class AnalyticsController extends Controller
                 ->join('orders', 'users.id', '=', 'orders.user_id')
                 ->join('order_items', 'orders.id', '=', 'order_items.order_id')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
-                ->where('products.user_id', $user->id)
+                ->where('products.merchant_id', $user->id)
                 ->where('orders.status', 'completed')
                 ->select(
                     'users.id',
                     'users.name',
                     'users.email',
                     DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
-                    DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    DB::raw('SUM(order_items.quantity * order_items.price_snapshot) as total_spent'),
+                    DB::raw('SUM(order_items.qty) as total_quantity'),
+                    DB::raw('SUM(order_items.qty * order_items.price) as total_spent'),
                     DB::raw('MAX(orders.created_at) as last_order_date')
                 )
                 ->groupBy('users.id', 'users.name', 'users.email')
@@ -263,7 +263,7 @@ class AnalyticsController extends Controller
                 ->join('orders', 'users.id', '=', 'orders.user_id')
                 ->join('order_items', 'orders.id', '=', 'order_items.order_id')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
-                ->where('products.user_id', $user->id)
+                ->where('products.merchant_id', $user->id)
                 ->where('orders.status', 'completed')
                 ->select(
                     DB::raw('DATE(MIN(orders.created_at)) as first_purchase_date'),
