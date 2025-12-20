@@ -1,5 +1,5 @@
 {
     "github.copilot.chat.agent.autoFix": true,
     "github.copilot.chat.alternateGptPrompt.enabled": true,
-    "CodeGPT.apiKey": "Ollama"
+    "CodeGPT.apiKey": "OpenAI"
 }

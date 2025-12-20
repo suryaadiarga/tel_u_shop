@@ -2262,6 +2262,7 @@ namespace App\Models {
      * @property string|null $description
      * @property string $name
      * @property int|null $merchant_id
+     * @property int|null $user_id
      * @property int $id
      * @property-read mixed $stock_status
      * @property-read mixed $formatted_price
@@ -2273,6 +2274,7 @@ namespace App\Models {
      * @property-read int|null $reviews_count
      * @property-read \App\Models\User $user
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereMerchantId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereName($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereDescription($value)
@@ -3236,12 +3238,12 @@ namespace App\Models {
      * @property string|null $two_factor_confirmed_at
      * @property string|null $two_factor_recovery_codes
      * @property string|null $two_factor_secret
+     * @property string $password
      * @property string|null $email_verified_at
      * @property string $email
      * @property string|null $username
      * @property string $name
      * @property int $id
-     * @property-read mixed $password
      * @property-read \App\Models\Role $role
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\WalletTransaction> $walletTransactions
      * @property-read int|null $walletTransactions_count
@@ -3261,6 +3263,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereUsername($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereEmail($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereEmailVerifiedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User wherePassword($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTwoFactorSecret($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTwoFactorRecoveryCodes($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTwoFactorConfirmedAt($value)
@@ -3580,6 +3583,8 @@ namespace App\Models {
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
      * @property int|null $order_id
+     * @property string|null $description
+     * @property string|null $type
      * @property string|null $title
      * @property float $amount
      * @property int $user_id
@@ -3591,6 +3596,8 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereAmount($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereTitle($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereType($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereDescription($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereOrderId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<WalletTransaction>|WalletTransaction whereUpdatedAt($value)

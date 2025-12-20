@@ -8,45 +8,38 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Exception;
 
 class AuthController extends Controller
 {
     /**
-     * Menangani pendaftaran pengguna baru (Customer/Merchant).
+     * REGISTER
      */
     public function register(Request $request)
     {
         $request->validate([
             'name'     => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email'    => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'nim'      => 'required|string|max:255',
             'kelas'    => 'required|string|max:255',
             'phone'    => 'required|string|max:255',
-            'role'     => 'required|in:1,2,3', // 1:Admin, 2:Merchant, 3:Customer
+            'role'     => 'required|in:1,2,3',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
             $user = User::create([
-                'name'      => $request->input('name'),
-                'username'  => $request->input('username'),
-                'email'     => $request->input('email'),
-                'password'  => $request->input('password'),
-                'nim'       => $request->input('nim'),
-                'kelas'     => $request->input('kelas'),
-                'phone'     => $request->input('phone'),
-                'role_id'   => $request->input('role'),
+                'name'     => $request->name,
+                'username' => $request->username,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'nim'      => $request->nim,
+                'kelas'    => $request->kelas,
+                'phone'    => $request->phone,
+                'role_id'  => $request->role,
             ]);
-
-            // Inisialisasi saldo awal atau profil tambahan jika diperlukan
-            if ($user->role_id == 3) {
-                // Contoh: $user->wallet()->create(['balance' => 0]);
-            }
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -65,36 +58,33 @@ class AuthController extends Controller
             DB::rollBack();
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Terjadi kesalahan saat pendaftaran.',
+                'message' => 'Gagal mendaftar.',
                 'error'   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Menangani log masuk pengguna.
+     * LOGIN
      */
     public function login(Request $request)
     {
         $request->validate([
             'email'    => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->input('email'))->first();
+        $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Kredensial tidak valid.'
             ], 401);
         }
 
-        // Keamanan: Hapus token lama agar hanya ada satu sesi aktif
-        // Menggunakan delete() method yang tersedia dari HasApiTokens trait
-        $user->tokens->each(function ($token) {
-            $token->delete();
-        });
+        // hapus token lama
+        $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -102,15 +92,15 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Login berhasil.',
             'data'    => [
-                'user'         => $user->only(['id', 'name', 'email', 'role', 'avatar']),
+                'user'         => $user->only(['id', 'name', 'email', 'role_id']),
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
             ]
-        ], 200);
+        ]);
     }
 
     /**
-     * Mengambil data profil pengguna yang sedang login.
+     * USER LOGIN INFO
      */
     public function me(Request $request)
     {
@@ -121,7 +111,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Memperbarui profil pengguna termasuk unggah avatar.
+     * UPDATE PROFILE
      */
     public function updateProfile(Request $request)
     {
@@ -134,16 +124,17 @@ class AuthController extends Controller
         ]);
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::delete($user->avatar);
+            if ($user->avatar_url) {
+                Storage::disk('public')->delete($user->avatar_url);
             }
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path;
+
+            $user->avatar_url = $request->file('avatar')->store('avatars', 'public');
         }
 
-        $user->name = $request->name ?? $user->name;
-        $user->email = $request->email ?? $user->email;
-        $user->save();
+        $user->update([
+            'name'  => $request->name ?? $user->name,
+            'email' => $request->email ?? $user->email,
+        ]);
 
         return response()->json([
             'status'  => 'success',
@@ -153,26 +144,26 @@ class AuthController extends Controller
     }
 
     /**
-     * Mengganti kata sandi pengguna.
+     * CHANGE PASSWORD
      */
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password' => 'required',
-            'new_password'     => 'required|string|min:8|confirmed',
+            'current_password'      => 'required|string',
+            'new_password'          => 'required|string|min:8|confirmed',
         ]);
 
         $user = $request->user();
 
-        if (!Hash::check($request->input('current_password'), $user->password)) {
+        if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Kata sandi saat ini tidak cocok.'
+                'message' => 'Kata sandi saat ini salah.'
             ], 422);
         }
 
         $user->update([
-            'password' => Hash::make($request->input('new_password'))
+            'password' => Hash::make($request->new_password)
         ]);
 
         return response()->json([
@@ -182,23 +173,15 @@ class AuthController extends Controller
     }
 
     /**
-     * Menangani logout (menghapus token).
+     * LOGOUT
      */
     public function logout(Request $request)
     {
-        try {
-            $request->user()->tokens()->delete();
+        $request->user()->tokens()->delete();
 
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Logout berhasil.'
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal melakukan logout.',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Logout berhasil.'
+        ]);
     }
 }

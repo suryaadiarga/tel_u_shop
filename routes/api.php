@@ -10,6 +10,7 @@ use App\Http\Controllers\Customer\ActivityController;
 use App\Http\Controllers\Customer\WishlistController;
 use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\Customer\LoyaltyController;
+use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Merchant\ProductController as MerchantProductController;
 use App\Http\Controllers\Merchant\OrderController as MerchantOrderController;
@@ -41,12 +42,13 @@ Route::middleware('api')->group(function () {
         // Auth
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
-        Route::put('/password', [AuthController::class, 'changePassword']);
+        Route::put('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Customer - Cart
         Route::get('/cart', [CartController::class, 'index']);
         Route::post('/cart/add/{product}', [CartController::class, 'add']);
+        Route::put('/cart/update/{item}', [CartController::class, 'updateQty']);
         Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
         Route::delete('/cart/clear', [CartController::class, 'clear']);
 
@@ -68,6 +70,11 @@ Route::middleware('api')->group(function () {
         Route::post('/wishlist/add/{product}', [WishlistController::class, 'add']);
         Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove']);
         Route::get('/wishlist/check/{product}', [WishlistController::class, 'check']);
+
+        // Customer - Products
+        Route::get('/products', [CustomerProductController::class, 'index']);
+        Route::get('/products/{id}', [CustomerProductController::class, 'show']);
+        Route::get('/products/categories', [CustomerProductController::class, 'categories']);
 
         // Customer - Reviews
         Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
