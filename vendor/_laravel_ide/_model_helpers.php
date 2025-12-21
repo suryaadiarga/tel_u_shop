@@ -959,8 +959,20 @@ namespace App\Models {
     /**
      * App\Models\Category
      *
+     * @property \Illuminate\Support\Carbon|null $updated_at
+     * @property \Illuminate\Support\Carbon|null $created_at
+     * @property string|null $description
+     * @property string $slug
+     * @property string $name
+     * @property int $id
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
      * @property-read int|null $products_count
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereName($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereSlug($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereDescription($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereCreatedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Category>|Category query()
@@ -2558,6 +2570,7 @@ namespace App\Models {
      *
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
+     * @property int|null $category_id
      * @property string|null $category
      * @property string|null $image_url
      * @property boolean $is_available
@@ -2591,6 +2604,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereIsAvailable($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereImageUrl($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereCategory($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereCategoryId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Product>|Product newModelQuery()
@@ -3533,6 +3547,9 @@ namespace App\Models {
      * App\Models\User
      *
      * @property string|null $student_id
+     * @property \Illuminate\Support\Carbon|null $banned_at
+     * @property boolean $is_banned
+     * @property string $merchant_status
      * @property int $role_id
      * @property float $wallet_balance
      * @property string|null $avatar_url
@@ -3541,7 +3558,6 @@ namespace App\Models {
      * @property string|null $nim
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
-     * @property bool $is_active
      * @property string|null $remember_token
      * @property string|null $two_factor_confirmed_at
      * @property string|null $two_factor_recovery_codes
@@ -3580,7 +3596,6 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTwoFactorRecoveryCodes($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTwoFactorConfirmedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereRememberToken($value)
-     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereIsActive($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereNim($value)
@@ -3589,6 +3604,9 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereAvatarUrl($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereWalletBalance($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereRoleId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereMerchantStatus($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereIsBanned($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereBannedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereStudentId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User newQuery()

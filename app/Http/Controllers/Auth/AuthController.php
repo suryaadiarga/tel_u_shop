@@ -25,7 +25,7 @@ class AuthController extends Controller
             'nim'      => 'required|string|max:255',
             'kelas'    => 'required|string|max:255',
             'phone'    => 'required|string|max:255',
-            'role'     => 'required|in:2,3',
+            'role'     => 'required|integer|in:2,3|exists:roles,id',
         ]);
 
         DB::beginTransaction();

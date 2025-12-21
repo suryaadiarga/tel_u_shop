@@ -1,18 +1,20 @@
-public function run()
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
 {
-$this->call([
-RoleSeeder::class,
-UserSeeder::class,
-ProductSeeder::class,
-]);
-}
-=======
-public function run()
-{
-$this->call([
-RoleSeeder::class,
-UserSeeder::class,
-ProductSeeder::class,
-TestDataSeeder::class, // Add test data for API testing
-]);
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+        $this->call([
+            RoleSeeder::class,
+            UserSeeder::class,
+            ProductSeeder::class,
+        ]);
+    }
 }

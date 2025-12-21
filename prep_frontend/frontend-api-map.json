@@ -1,0 +1,380 @@
+{
+  "POST /register": {
+    "role": "public",
+    "auth_required": false,
+    "pagination": false,
+    "notes": "role must exist in roles table; role=2 merchant (pending), role=3 customer (approved); returns access_token"
+  },
+  "POST /login": {
+    "role": "public",
+    "auth_required": false,
+    "pagination": false,
+    "notes": "returns access_token; 403 if banned"
+  },
+  "GET /me": {
+    "role": "any-authenticated",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "returns user with role"
+  },
+  "PUT /profile": {
+    "role": "any-authenticated",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "multipart/form-data for avatar; updates name/email"
+  },
+  "PUT /change-password": {
+    "role": "any-authenticated",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "requires current_password + new_password + new_password_confirmation"
+  },
+  "POST /logout": {
+    "role": "any-authenticated",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "revokes all tokens"
+  },
+  "GET /cart": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "returns items + total"
+  },
+  "POST /cart/add/{product}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "qty required; product must be available and merchant approved"
+  },
+  "PUT /cart/update/{item}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "item id (cart item); ownership enforced"
+  },
+  "DELETE /cart/remove/{item}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "ownership enforced"
+  },
+  "DELETE /cart/clear": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "clears cart"
+  },
+  "POST /checkout": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "payment_method wallet|cash; notes accepted but not stored"
+  },
+  "GET /wallet/balance": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "returns balance + formatted"
+  },
+  "GET /wallet/transactions": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filter type; sort_by created_at|amount|type"
+  },
+  "POST /wallet/topup": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "amount >= 1000"
+  },
+  "GET /activities": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "per_page default 10; includes stats"
+  },
+  "GET /activities/{id}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "order detail for current user"
+  },
+  "GET /activities/{id}/track": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "timeline; time fields may be null"
+  },
+  "GET /wishlist": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filter search; sort_by created_at"
+  },
+  "POST /wishlist/add/{product}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "422 if already in wishlist or product unavailable"
+  },
+  "DELETE /wishlist/remove/{product}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "404 if not in wishlist"
+  },
+  "GET /wishlist/check/{product}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "returns in_wishlist"
+  },
+  "GET /products": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "customer catalog; only available products"
+  },
+  "GET /products/{id}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "customer product detail"
+  },
+  "GET /products/categories": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "distinct categories for available products"
+  },
+  "GET /products/{product}/reviews": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "includes user id+name"
+  },
+  "POST /products/{product}/reviews": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "one review per user per product"
+  },
+  "GET /reviews/{review}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "owner only (403 otherwise)"
+  },
+  "PUT /reviews/{review}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "owner only"
+  },
+  "DELETE /reviews/{review}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "owner only"
+  },
+  "GET /my-reviews": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "includes product id+name"
+  },
+  "GET /loyalty/balance": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "sum of points"
+  },
+  "GET /loyalty/history": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filter type; sort_by created_at|points|type"
+  },
+  "POST /loyalty/redeem": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "points >= 100; 400 if insufficient"
+  },
+  "GET /loyalty/rewards": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "static rewards list with can_redeem"
+  },
+  "GET /notifications": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filter type/is_read"
+  },
+  "GET /notifications/stats": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "total/unread"
+  },
+  "GET /notifications/{id}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "own notifications only"
+  },
+  "PUT /notifications/{id}/read": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "marks read"
+  },
+  "PUT /notifications/mark-read": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "body {notification_ids:[]}"
+  },
+  "PUT /notifications/mark-all-read": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "marks all"
+  },
+  "DELETE /notifications/{id}": {
+    "role": "customer",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "deletes notification"
+  },
+  "GET /merchant/products": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filters category/search/is_available"
+  },
+  "POST /merchant/products": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "multipart image; requires is_available, prep_time, category"
+  },
+  "PUT /merchant/products/{id}": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "updates name/description/price/stock/image only"
+  },
+  "DELETE /merchant/products/{id}": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "delete product"
+  },
+  "GET /merchant/orders": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "items filtered to merchant; order total is full order"
+  },
+  "PUT /merchant/orders/{id}/status": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "updates whole order; allowed statuses include paid/shipped"
+  },
+  "GET /merchant/analytics/dashboard": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "query period days"
+  },
+  "GET /merchant/analytics/sales": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "query start_date/end_date"
+  },
+  "GET /merchant/analytics/products": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "product performance list"
+  },
+  "GET /merchant/analytics/customers": {
+    "role": "merchant",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "top customers + acquisition"
+  },
+  "GET /admin/orders": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "includes user and items.product id+name"
+  },
+  "GET /admin/orders/{id}": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "includes user and items.product id+name+price"
+  },
+  "PUT /admin/orders/{id}/status": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "allowed statuses: pending|processing|completed|cancelled"
+  },
+  "GET /admin/users": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": true,
+    "notes": "filters role/merchant_status/is_banned/search"
+  },
+  "GET /admin/users/{id}": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "user with role"
+  },
+  "PUT /admin/users/{id}/role": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "role admin|merchant|customer"
+  },
+  "PUT /admin/users/{id}/deactivate": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "no persistence (no is_active field)"
+  },
+  "PUT /admin/users/{id}/activate": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "no persistence (no is_active field)"
+  },
+  "PUT /admin/merchants/{id}/approve": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "sets merchant_status=approved"
+  },
+  "PUT /admin/users/{id}/ban": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "sets is_banned=true; cannot ban self"
+  },
+  "PUT /admin/users/{id}/unban": {
+    "role": "admin",
+    "auth_required": true,
+    "pagination": false,
+    "notes": "sets is_banned=false"
+  }
+}
