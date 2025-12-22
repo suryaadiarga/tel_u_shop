@@ -25,6 +25,8 @@ class UserSeeder extends Seeder
                 'name' => 'Merchant A',
                 'password' => Hash::make('password'),
                 'role_id' => 2,
+                'merchant_status' => 'approved',
+                'is_banned' => false,
             ]
         );
 

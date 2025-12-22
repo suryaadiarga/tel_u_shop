@@ -98,7 +98,7 @@ export default function Profile({
                                                 <Link
                                                     href={send()}
                                                     as="button"
-                                                    className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                                    className="text-primary underline decoration-primary/30 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-primary"
                                                 >
                                                     Click here to resend the
                                                     verification email.
@@ -116,7 +116,7 @@ export default function Profile({
                                         </div>
                                     )}
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-end gap-3">
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
@@ -131,7 +131,7 @@ export default function Profile({
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
+                                        <p className="text-sm text-muted-foreground">
                                             Saved
                                         </p>
                                     </Transition>

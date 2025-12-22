@@ -116,7 +116,7 @@ export default function Password() {
                                     />
                                 </div>
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-end gap-3">
                                     <Button
                                         disabled={processing}
                                         data-test="update-password-button"
@@ -131,7 +131,7 @@ export default function Password() {
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
+                                        <p className="text-sm text-muted-foreground">
                                             Saved
                                         </p>
                                     </Transition>

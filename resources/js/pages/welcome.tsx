@@ -14,10 +14,10 @@ export default function Welcome() {
                     rel="stylesheet"
                 />
             </Head>
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFDFC] p-6 text-[#1b1b18] dark:bg-[#0a0a0a]">
-                <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg flex flex-col items-center dark:bg-[#161615] dark:text-[#EDEDEC]">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 text-foreground">
+                <div className="w-full max-w-sm rounded-2xl bg-card border border-border/70 p-8 shadow-sm flex flex-col items-center">
                     <h1 className="text-3xl font-bold mb-2 text-center">Koperasi Tel-U</h1>
-                    <p className="text-center text-[#706f6c] mb-6 dark:text-[#A1A09A]">
+                    <p className="text-center text-muted-foreground mb-6">
                         Selamat datang di Koperasi Tel-U, anda bisa membeli apa yang anda cari disini.
                     </p>
                 </div>
@@ -25,7 +25,7 @@ export default function Welcome() {
                     {auth.user ? (
                         <Link
                             href={dashboard()}
-                            className="w-full rounded-md bg-[#bf1206] px-5 py-2 text-white text-center font-medium hover:bg-[#a00e05] dark:bg-[#EDEDEC] dark:text-[#1C1C1A] dark:hover:bg-[#d6d6d6]"
+                            className="w-full rounded-lg bg-primary px-5 py-2 text-primary-foreground text-center font-medium hover:bg-primary/90"
                         >
                             Dashboard
                         </Link>
@@ -33,13 +33,13 @@ export default function Welcome() {
                         <>
                             <Link
                                 href={login()}
-                                className="w-full rounded-md bg-[#bf1206] px-5 py-2 text-white text-center font-medium hover:bg-[#a00e05] dark:bg-[#EDEDEC] dark:text-[#1C1C1A] dark:hover:bg-[#d6d6d6]"
+                                className="w-full rounded-lg bg-primary px-5 py-2 text-primary-foreground text-center font-medium hover:bg-primary/90"
                             >
                                 Login
                             </Link>
                             <Link
                                 href={register()}
-                                className="w-full rounded-md border border-[#bf1206] px-5 py-2 text-[#bf1206] text-center font-medium hover:bg-[#f5f5f5] dark:border-[#EDEDEC] dark:text-[#EDEDEC] dark:hover:bg-[#232323]"
+                                className="w-full rounded-lg border border-primary/40 px-5 py-2 text-primary text-center font-medium hover:bg-primary/10"
                             >
                                 Register
                             </Link>

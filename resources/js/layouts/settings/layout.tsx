@@ -57,13 +57,16 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted':
+                                className={cn(
+                                    'w-full justify-start rounded-lg border border-transparent bg-card hover:bg-accent/70',
+                                    {
+                                        'border-primary/30 bg-primary/10 text-primary':
                                         currentPath ===
                                         (typeof item.href === 'string'
                                             ? item.href
                                             : item.href.url),
-                                })}
+                                    },
+                                )}
                             >
                                 <Link href={item.href}>
                                     {item.icon && (
@@ -79,7 +82,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 <Separator className="my-6 lg:hidden" />
 
                 <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
+                    <section className="max-w-xl space-y-8 rounded-2xl bg-card border border-border/70 p-6 shadow-sm">
                         {children}
                     </section>
                 </div>

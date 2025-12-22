@@ -1,17 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page">
-        <div class="app-title">Tel-U Shop</div>
+    <div class="auth-page">
+        <div class="auth-shell">
+            <section class="auth-panel">
+                <div class="auth-panel-top">
+                    <div class="auth-logo">TS</div>
+                    <div>
+                        <p class="auth-brand">Tel-U Shop</p>
+                        <p class="auth-brand-sub">Admin Console</p>
+                    </div>
+                </div>
+                <div class="auth-panel-body">
+                    <h2>Kelola toko kamu dengan dashboard premium.</h2>
+                    <p>
+                        Pantau pesanan, produk, dan pelanggan dari satu tempat
+                        dengan tampilan yang rapi dan modern.
+                    </p>
+                    <span class="auth-chip">Secure access</span>
+                </div>
+            </section>
 
-        <div class="page-content">
-            <div class="auth-wrap">
-                <div class="auth-card">
+            <section class="auth-card-shell">
+                <div class="auth-card auth-card--panel">
                     <div class="auth-head">
                         <span class="pill">Login</span>
                     </div>
-                    <h1 class="auth-title">Masuk</h1>
-                    <p class="auth-sub">Masuk dengan akun kampusmu.</p>
+                    <h1 class="auth-title">Welcome back</h1>
+                    <p class="auth-sub">Masuk untuk melanjutkan ke Tel-U Shop.</p>
 
                     @include('components.alert')
 
@@ -26,7 +42,7 @@
 
                         <div class="form-row">
                             <label class="label" for="password">Password</label>
-                            <input class="input" id="password" type="password" name="password" placeholder="••••••••"
+                            <input class="input" id="password" type="password" name="password" placeholder="********"
                                 required>
                             @error('password') <small class="help-link">{{ $message }}</small> @enderror
                         </div>
@@ -39,7 +55,7 @@
                             </div>
                         </div>
 
-                        <button class="btn" type="submit">
+                        <button class="btn btn-full" type="submit">
                             Log In
                         </button>
 
@@ -49,7 +65,7 @@
                         </div>
                     </form>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 @endsection

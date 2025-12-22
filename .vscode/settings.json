@@ -2,5 +2,6 @@
     "github.copilot.chat.agent.autoFix": true,
     "github.copilot.chat.alternateGptPrompt.enabled": true,
     "CodeGPT.apiKey": "OpenAI",
-    "chatgpt.openOnStartup": true
+    "chatgpt.openOnStartup": true,
+    "php.version": "8.2.12"
 }
