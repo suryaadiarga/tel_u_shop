@@ -6,7 +6,6 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use Inertia\Inertia;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -24,11 +23,15 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Custom view untuk 2FA challenge
-        Fortify::twoFactorChallengeView(fn() => Inertia::render('auth/two-factor-challenge'));
+        $simpleView = static fn(string $label) => response($label, 200);
 
-        // Custom view untuk confirm password
-        Fortify::confirmPasswordView(fn() => Inertia::render('auth/confirm-password'));
+        Fortify::loginView(fn() => $simpleView('login'));
+        Fortify::registerView(fn() => $simpleView('register'));
+        Fortify::requestPasswordResetLinkView(fn() => $simpleView('password.request'));
+        Fortify::resetPasswordView(fn(Request $request) => $simpleView('password.reset'));
+        Fortify::verifyEmailView(fn() => $simpleView('verification.notice'));
+        Fortify::confirmPasswordView(fn() => $simpleView('password.confirm'));
+        Fortify::twoFactorChallengeView(fn() => $simpleView('two-factor.login'));
 
         // Rate limiter untuk 2FA
         RateLimiter::for('two-factor', function (Request $request) {

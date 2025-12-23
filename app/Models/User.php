@@ -53,7 +53,9 @@ class User extends Authenticatable
      * Casting kolom
      */
     protected $casts = [
+        'password' => 'hashed',
         'wallet_balance' => 'float',
+        'loyalty_points' => 'integer',
         'is_banned' => 'boolean',
         'banned_at' => 'datetime',
     ];
