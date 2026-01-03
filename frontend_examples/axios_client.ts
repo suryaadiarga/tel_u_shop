@@ -1,1 +1,0 @@
-This file provides an Axios client setup for React, including interceptors for token management and error handling.

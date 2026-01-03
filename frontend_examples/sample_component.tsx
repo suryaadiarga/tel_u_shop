@@ -1,1 +1,0 @@
-This file contains a sample React component that interacts with the API, such as fetching and displaying cart data.

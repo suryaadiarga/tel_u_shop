@@ -1,0 +1,694 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/register",
+    "auth": false,
+    "roles": [],
+    "query": [],
+    "body": {
+      "name": "string",
+      "username": "string",
+      "email": "string",
+      "password": "string",
+      "password_confirmation": "string",
+      "nim": "string",
+      "kelas": "string",
+      "phone": "string",
+      "role": "integer (2=merchant, 3=customer)"
+    },
+    "responseNotes": "201 success; returns user, access_token, token_type. role=2 sets merchant_status=pending; role=3 approved.",
+    "pagination": false
+  },
+  {
+    "method": "POST",
+    "path": "/api/login",
+    "auth": false,
+    "roles": [],
+    "query": [],
+    "body": {
+      "email": "string",
+      "password": "string"
+    },
+    "responseNotes": "200 success; returns user {id,name,email,role_id} + access_token.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/me",
+    "auth": true,
+    "roles": ["customer", "merchant", "admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns current user with role relation.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/profile",
+    "auth": true,
+    "roles": ["customer", "merchant", "admin"],
+    "query": [],
+    "body": {
+      "name": "string (optional)",
+      "email": "string (optional)",
+      "avatar": "file (optional, image)"
+    },
+    "responseNotes": "multipart/form-data when uploading avatar; returns updated user.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/change-password",
+    "auth": true,
+    "roles": ["customer", "merchant", "admin"],
+    "query": [],
+    "body": {
+      "current_password": "string",
+      "new_password": "string",
+      "new_password_confirmation": "string"
+    },
+    "responseNotes": "Returns success message only.",
+    "pagination": false
+  },
+  {
+    "method": "POST",
+    "path": "/api/logout",
+    "auth": true,
+    "roles": ["customer", "merchant", "admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Revokes all tokens for the user.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/cart",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns items and total; empty cart returns empty items array.",
+    "pagination": false
+  },
+  {
+    "method": "POST",
+    "path": "/api/cart/add/{product}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "qty": "integer (min 1, max stock)"
+    },
+    "responseNotes": "Adds product to cart; returns cart item snapshot.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/cart/update/{item}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "qty": "integer (min 1, max stock)"
+    },
+    "responseNotes": "Updates cart item qty; must own cart item.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/cart/remove/{item}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Removes cart item; must own cart item.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/cart/clear",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Clears the current user's cart.",
+    "pagination": false
+  },
+  {
+    "method": "POST",
+    "path": "/api/checkout",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "payment_method": "string (wallet|cash)",
+      "notes": "string (optional)"
+    },
+    "responseNotes": "Creates order from cart; returns order with items.product and points_earned.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/balance",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns wallet balance and formatted string.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/transactions",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["type", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated wallet transactions filtered by type.",
+    "pagination": true
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/topup",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "amount": "number (min 1000)"
+    },
+    "responseNotes": "Top up wallet; returns current_balance and formatted.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/activities",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["status", "start_date", "end_date", "search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Returns stats plus paginated orders; default per_page=10.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/activities/{id}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns order with items.product.merchant for current user.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/activities/{id}/track",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns order_id, current_status, timeline array.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/wishlist",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated wishlist items with product.",
+    "pagination": true
+  },
+  {
+    "method": "POST",
+    "path": "/api/wishlist/add/{product}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Adds product to wishlist; rejects duplicates.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/wishlist/remove/{product}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Removes product from wishlist.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/wishlist/check/{product}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns { in_wishlist: boolean }.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/products",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["category", "search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated customer product catalog.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/products/{id}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Product detail with merchant info.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/products/categories",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Distinct product categories.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/products/{product}/reviews",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated reviews for a product.",
+    "pagination": true
+  },
+  {
+    "method": "POST",
+    "path": "/api/products/{product}/reviews",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "rating": "integer (1-5)",
+      "comment": "string (optional)"
+    },
+    "responseNotes": "Creates review if not already reviewed.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/reviews/{review}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Review detail; only owner can access.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/reviews/{review}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "rating": "integer (1-5, optional)",
+      "comment": "string (optional)"
+    },
+    "responseNotes": "Updates review; only owner can update.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/reviews/{review}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Deletes review; only owner can delete.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/my-reviews",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated reviews created by the current user.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/loyalty/balance",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns loyalty balance.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/loyalty/history",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["type", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated loyalty points history.",
+    "pagination": true
+  },
+  {
+    "method": "POST",
+    "path": "/api/loyalty/redeem",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "points": "integer (min 100)",
+      "description": "string"
+    },
+    "responseNotes": "Redeems points and returns remaining balance.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/loyalty/rewards",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns static rewards list with can_redeem flag.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications",
+    "auth": true,
+    "roles": ["customer"],
+    "query": ["type", "is_read", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated notifications for the current user.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/stats",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns total and unread counts.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/{id}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Notification detail for current user.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/notifications/{id}/read",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Marks a notification as read.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/notifications/mark-read",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {
+      "notification_ids": "integer[]"
+    },
+    "responseNotes": "Marks multiple notifications as read.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/notifications/mark-all-read",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Marks all notifications as read.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/notifications/{id}",
+    "auth": true,
+    "roles": ["customer"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Deletes a notification.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/products",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": ["search", "category", "is_available", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated products for the current merchant (merchant_status=approved).",
+    "pagination": true
+  },
+  {
+    "method": "POST",
+    "path": "/api/merchant/products",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {
+      "name": "string",
+      "description": "string",
+      "price": "number",
+      "stock": "integer",
+      "category": "string",
+      "prep_time": "integer",
+      "is_available": "boolean",
+      "image": "file (optional, image)"
+    },
+    "responseNotes": "multipart/form-data for image; creates product.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/merchant/products/{id}",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {
+      "name": "string (optional)",
+      "description": "string (optional)",
+      "price": "number (optional)",
+      "stock": "integer (optional)",
+      "image": "file (optional, image)"
+    },
+    "responseNotes": "multipart/form-data for image; category/prep_time/is_available not updatable here.",
+    "pagination": false
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/merchant/products/{id}",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Deletes a merchant product.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/orders",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": ["status", "start_date", "end_date", "search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated orders containing merchant products.",
+    "pagination": true
+  },
+  {
+    "method": "PUT",
+    "path": "/api/merchant/orders/{id}/status",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {
+      "status": "string (pending|processing|paid|shipped|completed|cancelled)"
+    },
+    "responseNotes": "Updates whole order status; only if order includes merchant products.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/analytics/dashboard",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": ["period"],
+    "body": {},
+    "responseNotes": "Dashboard overview metrics; period is days (default 30).",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/analytics/sales",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": ["start_date", "end_date"],
+    "body": {},
+    "responseNotes": "Sales analytics by date range.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/analytics/products",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Product performance list for current merchant.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/merchant/analytics/customers",
+    "auth": true,
+    "roles": ["merchant"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Customer analytics for current merchant.",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/orders",
+    "auth": true,
+    "roles": ["admin"],
+    "query": ["status", "start_date", "end_date", "search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated orders (admin view); default per_page=15.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/orders/{id}",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Order detail with user and item product info.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/orders/{id}/status",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {
+      "status": "string (pending|processing|completed|cancelled)"
+    },
+    "responseNotes": "Updates order status (admin).",
+    "pagination": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/users",
+    "auth": true,
+    "roles": ["admin"],
+    "query": ["role", "merchant_status", "is_banned", "search", "per_page", "page", "sort_by", "sort_order"],
+    "body": {},
+    "responseNotes": "Paginated users with role relation.",
+    "pagination": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/users/{id}",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "User detail with role.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/users/{id}/role",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {
+      "role": "string (admin|merchant|customer)"
+    },
+    "responseNotes": "Updates user role by role name.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/users/{id}/deactivate",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns success but does not persist (no is_active field).",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/users/{id}/activate",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Returns success but does not persist (no is_active field).",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/merchants/{id}/approve",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Approves merchant account (merchant_status=approved).",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/users/{id}/ban",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Bans user; cannot ban self.",
+    "pagination": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/admin/users/{id}/unban",
+    "auth": true,
+    "roles": ["admin"],
+    "query": [],
+    "body": {},
+    "responseNotes": "Unbans user.",
+    "pagination": false
+  }
+]

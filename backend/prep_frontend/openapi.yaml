@@ -1,0 +1,1200 @@
+openapi: 3.0.3
+info:
+  title: TEL-U Shop API (Backend Source)
+  version: 1.0.0
+servers:
+  - url: http://localhost/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  schemas:
+    ResponseEnvelope:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+          nullable: true
+        data:
+          nullable: true
+        errors:
+          nullable: true
+      additionalProperties: true
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+        from:
+          type: integer
+          nullable: true
+        to:
+          type: integer
+          nullable: true
+        data:
+          type: array
+          items:
+            type: object
+        links:
+          type: array
+          items:
+            type: object
+      additionalProperties: true
+    PaginatedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Pagination'
+        errors:
+          nullable: true
+      additionalProperties: true
+paths:
+  /register:
+    post:
+      summary: Register
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                username: { type: string }
+                email: { type: string }
+                password: { type: string }
+                password_confirmation: { type: string }
+                nim: { type: string }
+                kelas: { type: string }
+                phone: { type: string }
+                role: { type: integer }
+              required: [name, username, email, password, password_confirmation, nim, kelas, phone, role]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /login:
+    post:
+      summary: Login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+              required: [email, password]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /me:
+    get:
+      summary: Current user
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /profile:
+    put:
+      summary: Update profile
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                avatar: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /change-password:
+    put:
+      summary: Change password
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password: { type: string }
+                new_password: { type: string }
+                new_password_confirmation: { type: string }
+              required: [current_password, new_password, new_password_confirmation]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /cart:
+    get:
+      summary: Get cart
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /cart/add/{product}:
+    post:
+      summary: Add to cart
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qty: { type: integer }
+              required: [qty]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /cart/update/{item}:
+    put:
+      summary: Update cart item qty
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: item
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qty: { type: integer }
+              required: [qty]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /cart/remove/{item}:
+    delete:
+      summary: Remove cart item
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: item
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /cart/clear:
+    delete:
+      summary: Clear cart
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /checkout:
+    post:
+      summary: Checkout
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_method: { type: string }
+                notes: { type: string }
+              required: [payment_method]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /wallet/balance:
+    get:
+      summary: Wallet balance
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /wallet/transactions:
+    get:
+      summary: Wallet transactions
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /wallet/topup:
+    post:
+      summary: Wallet topup
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount: { type: number }
+              required: [amount]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /activities:
+    get:
+      summary: Activity list
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /activities/{id}:
+    get:
+      summary: Activity detail
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /activities/{id}/track:
+    get:
+      summary: Activity tracking
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /wishlist:
+    get:
+      summary: Wishlist
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /wishlist/add/{product}:
+    post:
+      summary: Add to wishlist
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /wishlist/remove/{product}:
+    delete:
+      summary: Remove from wishlist
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /wishlist/check/{product}:
+    get:
+      summary: Check wishlist
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /products:
+    get:
+      summary: Product catalog
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /products/{id}:
+    get:
+      summary: Product detail
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /products/categories:
+    get:
+      summary: Product categories
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /products/{product}/reviews:
+    get:
+      summary: Product reviews
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+    post:
+      summary: Create review
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating: { type: integer }
+                comment: { type: string }
+              required: [rating]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /reviews/{review}:
+    get:
+      summary: Review detail
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: review
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+    put:
+      summary: Update review
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: review
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating: { type: integer }
+                comment: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+    delete:
+      summary: Delete review
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: review
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /my-reviews:
+    get:
+      summary: My reviews
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /loyalty/balance:
+    get:
+      summary: Loyalty balance
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /loyalty/history:
+    get:
+      summary: Loyalty history
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /loyalty/redeem:
+    post:
+      summary: Redeem loyalty points
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                points: { type: integer }
+                description: { type: string }
+              required: [points, description]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /loyalty/rewards:
+    get:
+      summary: Loyalty rewards
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /notifications:
+    get:
+      summary: Notifications
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /notifications/stats:
+    get:
+      summary: Notification stats
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /notifications/{id}:
+    get:
+      summary: Notification detail
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+    delete:
+      summary: Delete notification
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /notifications/{id}/read:
+    put:
+      summary: Mark notification as read
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /notifications/mark-read:
+    put:
+      summary: Mark multiple notifications as read
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notification_ids:
+                  type: array
+                  items: { type: integer }
+              required: [notification_ids]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /notifications/mark-all-read:
+    put:
+      summary: Mark all notifications as read
+      tags: [Customer]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/products:
+    get:
+      summary: Merchant products
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+    post:
+      summary: Create merchant product
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                price: { type: number }
+                stock: { type: integer }
+                category: { type: string }
+                prep_time: { type: integer }
+                is_available: { type: boolean }
+                image: { type: string, format: binary }
+              required: [name, description, price, stock, category, prep_time, is_available]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/products/{id}:
+    put:
+      summary: Update merchant product
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                price: { type: number }
+                stock: { type: integer }
+                image: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+    delete:
+      summary: Delete merchant product
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/orders:
+    get:
+      summary: Merchant orders
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /merchant/orders/{id}/status:
+    put:
+      summary: Update merchant order status
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+              required: [status]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/analytics/dashboard:
+    get:
+      summary: Merchant dashboard analytics
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/analytics/sales:
+    get:
+      summary: Merchant sales analytics
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/analytics/products:
+    get:
+      summary: Merchant product performance
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /merchant/analytics/customers:
+    get:
+      summary: Merchant customer analytics
+      tags: [Merchant]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/orders:
+    get:
+      summary: Admin orders
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /admin/orders/{id}:
+    get:
+      summary: Admin order detail
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/orders/{id}/status:
+    put:
+      summary: Update admin order status
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+              required: [status]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users:
+    get:
+      summary: Admin users
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+  /admin/users/{id}:
+    get:
+      summary: Admin user detail
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users/{id}/role:
+    put:
+      summary: Update user role
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string }
+              required: [role]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users/{id}/deactivate:
+    put:
+      summary: Deactivate user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users/{id}/activate:
+    put:
+      summary: Activate user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/merchants/{id}/approve:
+    put:
+      summary: Approve merchant
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users/{id}/ban:
+    put:
+      summary: Ban user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
+  /admin/users/{id}/unban:
+    put:
+      summary: Unban user
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEnvelope'
