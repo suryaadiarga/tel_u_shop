@@ -57,6 +57,7 @@ export function CustomerLoyaltyPage() {
   const [redeemForm, setRedeemForm] = React.useState({ points: "", description: "" })
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({})
 
   const loadLoyalty = React.useCallback(() => {
     setError(null)
@@ -83,6 +84,7 @@ export function CustomerLoyaltyPage() {
   }, [loadLoyalty])
 
   async function handleRedeem() {
+    setFieldErrors({})
     try {
       await apiFetch("/loyalty/redeem", {
         method: "POST",
@@ -95,8 +97,14 @@ export function CustomerLoyaltyPage() {
       setRedeemForm({ points: "", description: "" })
       loadLoyalty()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Redeem failed"
-      push({ title: "Redeem error", description: message, variant: "error" })
+      if (err instanceof ApiError) {
+        push({ title: "Redeem error", description: err.message, variant: "error" })
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setFieldErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        push({ title: "Redeem error", description: "Redeem failed", variant: "error" })
+      }
     }
   }
 
@@ -135,11 +143,17 @@ export function CustomerLoyaltyPage() {
               value={redeemForm.points}
               onChange={(event) => setRedeemForm((prev) => ({ ...prev, points: event.target.value }))}
             />
+            {fieldErrors.points ? (
+              <p className="text-xs text-rose-500">{fieldErrors.points.join(", ")}</p>
+            ) : null}
             <Input
               placeholder="Description"
               value={redeemForm.description}
               onChange={(event) => setRedeemForm((prev) => ({ ...prev, description: event.target.value }))}
             />
+            {fieldErrors.description ? (
+              <p className="text-xs text-rose-500">{fieldErrors.description.join(", ")}</p>
+            ) : null}
             <Button className="md:col-span-2" onClick={handleRedeem}>
               Redeem points
             </Button>

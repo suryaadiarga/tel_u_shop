@@ -1,5 +1,5 @@
 ﻿import * as React from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Card, CardContent } from "../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableToolbar } from "../../components/ui/table"
 import { Button } from "../../components/ui/button"
@@ -28,6 +28,7 @@ type CartData = {
 }
 
 export function CustomerCartPage() {
+  const navigate = useNavigate()
   const { push } = useToast()
   const [cart, setCart] = React.useState<CartData | null>(null)
   const [draftQty, setDraftQty] = React.useState<Record<number, number>>({})
@@ -111,6 +112,7 @@ export function CustomerCartPage() {
       push({ title: "Checkout success", variant: "success" })
       setNotes("")
       loadCart()
+      navigate("/app/orders")
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Checkout failed"
       push({ title: "Checkout error", description: message, variant: "error" })

@@ -112,6 +112,7 @@ class ProductController extends Controller
             'description' => 'sometimes|string',
             'price' => 'sometimes|numeric|min:0',
             'stock' => 'sometimes|integer|min:0',
+            'category' => 'sometimes|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -123,7 +124,7 @@ class ProductController extends Controller
                 $product->image_url = $request->file('image')->store('products', 'public');
             }
 
-            $product->update($request->only(['name', 'description', 'price', 'stock']));
+            $product->update($request->only(['name', 'description', 'price', 'stock', 'category']));
 
             return response()->json([
                 'status' => 'success',

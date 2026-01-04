@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\WalletTransaction;
+use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
 use App\Services\QueryService;
 use Exception;
@@ -154,10 +155,25 @@ class ActivityController extends Controller
                 ], 422);
             }
 
+            $previousStatus = $order->status;
             $order->update([
                 'status' => 'completed',
                 'completed_at' => now()
             ]);
+
+            if ($previousStatus !== $order->status) {
+                Notification::create([
+                    'user_id' => $order->user_id,
+                    'type' => 'order_status',
+                    'title' => 'Status Pesanan Diperbarui',
+                    'message' => "Status pesanan #{$order->id} berubah dari {$previousStatus} ke {$order->status}.",
+                    'data' => [
+                        'order_id' => $order->id,
+                        'from' => $previousStatus,
+                        'to' => $order->status,
+                    ],
+                ]);
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -219,7 +235,22 @@ class ActivityController extends Controller
             }
 
             // 4. Update status pesanan menjadi cancelled
+            $previousStatus = $order->status;
             $order->update(['status' => 'cancelled']);
+
+            if ($previousStatus !== $order->status) {
+                Notification::create([
+                    'user_id' => $order->user_id,
+                    'type' => 'order_status',
+                    'title' => 'Status Pesanan Diperbarui',
+                    'message' => "Status pesanan #{$order->id} berubah dari {$previousStatus} ke {$order->status}.",
+                    'data' => [
+                        'order_id' => $order->id,
+                        'from' => $previousStatus,
+                        'to' => $order->status,
+                    ],
+                ]);
+            }
 
             DB::commit();
 

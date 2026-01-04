@@ -14,9 +14,11 @@ export function ProfilePage() {
   const role = useRole()
   const { push } = useToast()
   const [error, setError] = React.useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({})
   const [busy, setBusy] = React.useState(false)
   const [passwordBusy, setPasswordBusy] = React.useState(false)
   const [passwordError, setPasswordError] = React.useState<string | null>(null)
+  const [passwordFieldErrors, setPasswordFieldErrors] = React.useState<Record<string, string[]>>({})
   const [form, setForm] = React.useState({
     name: user?.name ?? "",
     email: user?.email ?? "",
@@ -41,6 +43,7 @@ export function ProfilePage() {
   async function handleProfileSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
+    setFieldErrors({})
     setBusy(true)
 
     try {
@@ -58,8 +61,14 @@ export function ProfilePage() {
       setAvatar(null)
       await refresh()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update profile"
-      setError(message)
+      if (err instanceof ApiError) {
+        setError(err.message)
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setFieldErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        setError("Failed to update profile")
+      }
     } finally {
       setBusy(false)
     }
@@ -68,6 +77,7 @@ export function ProfilePage() {
   async function handlePasswordSubmit(event: React.FormEvent) {
     event.preventDefault()
     setPasswordError(null)
+    setPasswordFieldErrors({})
     setPasswordBusy(true)
 
     try {
@@ -78,8 +88,14 @@ export function ProfilePage() {
       push({ title: "Password updated", variant: "success" })
       setPasswordForm({ current_password: "", new_password: "", new_password_confirmation: "" })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update password"
-      setPasswordError(message)
+      if (err instanceof ApiError) {
+        setPasswordError(err.message)
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setPasswordFieldErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        setPasswordError("Failed to update password")
+      }
     } finally {
       setPasswordBusy(false)
     }
@@ -118,6 +134,9 @@ export function ProfilePage() {
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Name</label>
               <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
+              {fieldErrors.name ? (
+                <p className="text-xs text-rose-500">{fieldErrors.name.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</label>
@@ -126,10 +145,16 @@ export function ProfilePage() {
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
               />
+              {fieldErrors.email ? (
+                <p className="text-xs text-rose-500">{fieldErrors.email.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Avatar</label>
               <Input type="file" accept="image/*" onChange={(event) => setAvatar(event.target.files?.[0] ?? null)} />
+              {fieldErrors.avatar ? (
+                <p className="text-xs text-rose-500">{fieldErrors.avatar.join(", ")}</p>
+              ) : null}
             </div>
             <Button type="submit" disabled={busy}>
               {busy ? "Saving..." : "Save changes"}
@@ -162,6 +187,9 @@ export function ProfilePage() {
                   setPasswordForm((prev) => ({ ...prev, current_password: event.target.value }))
                 }
               />
+              {passwordFieldErrors.current_password ? (
+                <p className="text-xs text-rose-500">{passwordFieldErrors.current_password.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">New password</label>
@@ -170,6 +198,9 @@ export function ProfilePage() {
                 value={passwordForm.new_password}
                 onChange={(event) => setPasswordForm((prev) => ({ ...prev, new_password: event.target.value }))}
               />
+              {passwordFieldErrors.new_password ? (
+                <p className="text-xs text-rose-500">{passwordFieldErrors.new_password.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -182,6 +213,9 @@ export function ProfilePage() {
                   setPasswordForm((prev) => ({ ...prev, new_password_confirmation: event.target.value }))
                 }
               />
+              {passwordFieldErrors.new_password_confirmation ? (
+                <p className="text-xs text-rose-500">{passwordFieldErrors.new_password_confirmation.join(", ")}</p>
+              ) : null}
             </div>
             <Button type="submit" variant="secondary" disabled={passwordBusy}>
               {passwordBusy ? "Updating..." : "Update password"}

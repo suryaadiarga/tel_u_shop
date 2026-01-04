@@ -259,17 +259,21 @@ class AnalyticsController extends Controller
                 ->get();
 
             // Customer acquisition trend
-            $customerAcquisition = DB::table('users')
-                ->join('orders', 'users.id', '=', 'orders.user_id')
+            $firstPurchases = DB::table('orders')
                 ->join('order_items', 'orders.id', '=', 'order_items.order_id')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
                 ->where('products.merchant_id', $user->id)
                 ->where('orders.status', 'completed')
+                ->select('orders.user_id', DB::raw('MIN(orders.created_at) as first_purchase_at'))
+                ->groupBy('orders.user_id');
+
+            $customerAcquisition = DB::query()
+                ->fromSub($firstPurchases, 'first_purchases')
                 ->select(
-                    DB::raw('DATE(MIN(orders.created_at)) as first_purchase_date'),
-                    DB::raw('COUNT(DISTINCT users.id) as new_customers')
+                    DB::raw('DATE(first_purchase_at) as first_purchase_date'),
+                    DB::raw('COUNT(*) as new_customers')
                 )
-                ->groupBy(DB::raw('DATE(MIN(orders.created_at))'))
+                ->groupBy(DB::raw('DATE(first_purchase_at)'))
                 ->orderBy('first_purchase_date')
                 ->get();
 

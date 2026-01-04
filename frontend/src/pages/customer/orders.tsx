@@ -7,7 +7,7 @@ import { Button } from "../../components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
 import { Skeleton } from "../../components/ui/skeleton"
 import { EmptyState } from "../../components/ui/empty-state"
-import { apiFetch, ApiError } from "../../lib/api"
+import { apiFetch, ApiError, unwrapList } from "../../lib/api"
 import { buildQuery } from "../../lib/query"
 
 type Order = {
@@ -31,6 +31,23 @@ type Paginator<T> = {
   current_page: number
   last_page: number
   total: number
+  meta?: unknown
+  links?: unknown
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function getNumber(record: Record<string, unknown> | null, key: string, fallback: number) {
+  if (!record) return fallback
+  const value = record[key]
+  if (typeof value === "number") return value
+  if (typeof value === "string") {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+  return fallback
 }
 
 export function CustomerOrdersPage() {
@@ -50,9 +67,20 @@ export function CustomerOrdersPage() {
       page: filters.page,
     })}`)
       .then((payload) => {
-        const typed = payload as { data?: Paginator<Order>; stats?: Stats }
-        setOrders(typed.data ?? null)
-        setStats(typed.stats ?? null)
+        const root = (payload as { data?: unknown }).data ?? payload
+        const statsPayload = isRecord(root) && isRecord(root.stats) ? root.stats : null
+        setStats(statsPayload as Stats | null)
+
+        const { items, meta, links } = unwrapList<Order>(payload)
+        const metaRecord = isRecord(meta) ? meta : null
+        setOrders({
+          data: items,
+          current_page: getNumber(metaRecord, "current_page", 1),
+          last_page: getNumber(metaRecord, "last_page", 1),
+          total: getNumber(metaRecord, "total", items.length),
+          meta,
+          links,
+        })
       })
       .catch((err) => {
         const message = err instanceof ApiError ? err.message : "Failed to load orders"

@@ -26,6 +26,15 @@ type DashboardData = {
   period_days?: string | number
 }
 
+function mapAnalyticsError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.statusCode === 403) return "Access restricted"
+    if (error.statusCode >= 500) return "Server error"
+    return error.message
+  }
+  return "Network error"
+}
+
 export function MerchantAnalyticsPage() {
   const [dashboard, setDashboard] = React.useState<DashboardData | null>(null)
   const [sales, setSales] = React.useState<any | null>(null)
@@ -43,7 +52,7 @@ export function MerchantAnalyticsPage() {
       apiFetch("/merchant/analytics/sales"),
       apiFetch("/merchant/analytics/products"),
       apiFetch("/merchant/analytics/customers"),
-    ])
+      ])
       .then(([dashboardPayload, salesPayload, productsPayload, customersPayload]) => {
         setDashboard((dashboardPayload as { data?: DashboardData }).data ?? null)
         setSales((salesPayload as { data?: any }).data ?? null)
@@ -51,7 +60,7 @@ export function MerchantAnalyticsPage() {
         setCustomers((customersPayload as { data?: any }).data ?? null)
       })
       .catch((err) => {
-        const message = err instanceof ApiError ? err.message : "Failed to load analytics"
+        const message = mapAnalyticsError(err)
         setError(message)
       })
       .finally(() => setLoading(false))

@@ -10,6 +10,14 @@ import { apiFetch, ApiError } from "../../lib/api"
 import { buildQuery } from "../../lib/query"
 import { useToast } from "../../components/ui/toast"
 
+function formatApiError(error: unknown, fallback: string) {
+  if (!(error instanceof ApiError)) return fallback
+  if (!error.errors) return error.message
+  if (typeof error.errors === "string") return `${error.message}: ${error.errors}`
+  const details = Object.values(error.errors).flat().join(" ")
+  return details ? `${error.message}: ${details}` : error.message
+}
+
 type Order = {
   id: number
   status: string
@@ -40,7 +48,7 @@ export function MerchantOrdersPage() {
     apiFetch(`/merchant/orders${buildQuery(filters)}`)
       .then((payload) => setOrders((payload as { data?: Paginator<Order> }).data ?? null))
       .catch((err) => {
-        const message = err instanceof ApiError ? err.message : "Failed to load orders"
+        const message = formatApiError(err, "Failed to load orders")
         setError(message)
       })
       .finally(() => setLoading(false))
@@ -59,7 +67,7 @@ export function MerchantOrdersPage() {
       push({ title: "Order updated", variant: "success" })
       loadOrders()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update order"
+      const message = formatApiError(err, "Failed to update order")
       push({ title: "Order update error", description: message, variant: "error" })
     }
   }
@@ -134,7 +142,7 @@ export function MerchantOrdersPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <select
                     className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                    defaultValue={order.status}
+                    value={order.status}
                     onChange={(event) => handleStatusUpdate(order.id, event.target.value)}
                   >
                     <option value="pending">Pending</option>

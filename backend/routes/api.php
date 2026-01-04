@@ -45,6 +45,8 @@ Route::middleware('api')->group(function () {
         Route::put('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
+        Route::get('/products/categories', [CustomerProductController::class, 'categories']);
+
         Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':customer')->group(function () {
             // Customer - Cart
             Route::get('/cart', [CartController::class, 'index']);
@@ -75,7 +77,6 @@ Route::middleware('api')->group(function () {
             // Customer - Products
             Route::get('/products', [CustomerProductController::class, 'index']);
             Route::get('/products/{id}', [CustomerProductController::class, 'show']);
-            Route::get('/products/categories', [CustomerProductController::class, 'categories']);
 
             // Customer - Reviews
             Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
@@ -132,8 +133,8 @@ Route::middleware('api')->group(function () {
         Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':admin')->group(function () {
             // Orders
             Route::get('/admin/orders', [AdminOrderController::class, 'index']);
-            Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show']);
-            Route::put('/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+            Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show']);
+            Route::put('/admin/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
 
             // Users
             Route::get('/admin/users', [AdminUserController::class, 'index']);

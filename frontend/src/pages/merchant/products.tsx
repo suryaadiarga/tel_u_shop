@@ -9,6 +9,7 @@ import { EmptyState } from "../../components/ui/empty-state"
 import { apiFetch, ApiError } from "../../lib/api"
 import { buildQuery } from "../../lib/query"
 import { resolveStorageUrl } from "../../lib/storage"
+import { getCategories } from "../../lib/categories"
 import { useToast } from "../../components/ui/toast"
 
 type Product = {
@@ -36,20 +37,46 @@ const initialCreate = {
   stock: "",
   category: "",
   prep_time: "",
-  is_available: "true",
+  is_available: true,
 }
 
 export function MerchantProductsPage() {
   const { push } = useToast()
   const [products, setProducts] = React.useState<Paginator<Product> | null>(null)
   const [filters, setFilters] = React.useState({ search: "", category: "", is_available: "" })
+  const [categories, setCategories] = React.useState<string[]>([])
+  const [categoriesLoading, setCategoriesLoading] = React.useState(false)
+  const [categoriesError, setCategoriesError] = React.useState<string | null>(null)
   const [createForm, setCreateForm] = React.useState(initialCreate)
   const [createImage, setCreateImage] = React.useState<File | null>(null)
   const [selected, setSelected] = React.useState<Product | null>(null)
-  const [editForm, setEditForm] = React.useState({ name: "", description: "", price: "", stock: "" })
+  const [editForm, setEditForm] = React.useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    category: "",
+    is_available: true,
+  })
   const [editImage, setEditImage] = React.useState<File | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [createErrors, setCreateErrors] = React.useState<Record<string, string[]>>({})
+  const [editErrors, setEditErrors] = React.useState<Record<string, string[]>>({})
+
+  React.useEffect(() => {
+    setCategoriesLoading(true)
+    setCategoriesError(null)
+
+    getCategories()
+      .then((data) => setCategories(data))
+      .catch((err) => {
+        const message = err instanceof ApiError ? err.message : "Failed to load categories"
+        setCategoriesError(message)
+        setCategories([])
+      })
+      .finally(() => setCategoriesLoading(false))
+  }, [])
 
   const loadProducts = React.useCallback(() => {
     setLoading(true)
@@ -75,12 +102,15 @@ export function MerchantProductsPage() {
         description: selected.description,
         price: String(selected.price),
         stock: String(selected.stock),
+        category: selected.category ?? "",
+        is_available: selected.is_available ?? true,
       })
     }
   }, [selected])
 
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault()
+    setCreateErrors({})
 
     const payload = new FormData()
     payload.append("name", createForm.name)
@@ -89,7 +119,7 @@ export function MerchantProductsPage() {
     payload.append("stock", createForm.stock)
     payload.append("category", createForm.category)
     payload.append("prep_time", createForm.prep_time)
-    payload.append("is_available", createForm.is_available)
+    payload.append("is_available", createForm.is_available ? "1" : "0")
     if (createImage) payload.append("image", createImage)
 
     try {
@@ -102,20 +132,29 @@ export function MerchantProductsPage() {
       setCreateImage(null)
       loadProducts()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to create product"
-      push({ title: "Create product error", description: message, variant: "error" })
+      if (err instanceof ApiError) {
+        push({ title: "Create product error", description: err.message, variant: "error" })
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setCreateErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        push({ title: "Create product error", description: "Failed to create product", variant: "error" })
+      }
     }
   }
 
   async function handleUpdate(event: React.FormEvent) {
     event.preventDefault()
     if (!selected) return
+    setEditErrors({})
 
     const payload = new FormData()
     if (editForm.name) payload.append("name", editForm.name)
     if (editForm.description) payload.append("description", editForm.description)
     if (editForm.price) payload.append("price", editForm.price)
     if (editForm.stock) payload.append("stock", editForm.stock)
+    if (editForm.category) payload.append("category", editForm.category)
+    payload.append("is_available", editForm.is_available ? "1" : "0")
     if (editImage) payload.append("image", editImage)
 
     try {
@@ -127,8 +166,14 @@ export function MerchantProductsPage() {
       setEditImage(null)
       loadProducts()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update product"
-      push({ title: "Update product error", description: message, variant: "error" })
+      if (err instanceof ApiError) {
+        push({ title: "Update product error", description: err.message, variant: "error" })
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setEditErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        push({ title: "Update product error", description: "Failed to update product", variant: "error" })
+      }
     }
   }
 
@@ -154,7 +199,6 @@ export function MerchantProductsPage() {
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreate}>
             {[
               { label: "Name", name: "name" },
-              { label: "Category", name: "category" },
               { label: "Price", name: "price", type: "number" },
               { label: "Stock", name: "stock", type: "number" },
               { label: "Prep time (min)", name: "prep_time", type: "number" },
@@ -165,14 +209,43 @@ export function MerchantProductsPage() {
                 </label>
                 <Input
                   type={field.type ?? "text"}
-                  value={createForm[field.name as keyof typeof createForm]}
+                  value={String(createForm[field.name as keyof typeof createForm])}
                   onChange={(event) =>
                     setCreateForm((prev) => ({ ...prev, [field.name]: event.target.value }))
                   }
                   required
                 />
+                {createErrors[field.name] ? (
+                  <p className="text-xs text-rose-500">{createErrors[field.name].join(", ")}</p>
+                ) : null}
               </div>
             ))}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Category</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={createForm.category}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, category: event.target.value }))}
+                disabled={categoriesLoading || categories.length === 0}
+                required
+              >
+                <option value="">
+                  {categoriesLoading ? "Loading categories..." : "Select category"}
+                </option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              {categoriesError ? <p className="text-xs text-rose-500">{categoriesError}</p> : null}
+              {!categoriesLoading && !categoriesError && categories.length === 0 ? (
+                <p className="text-xs text-rose-500">No categories available.</p>
+              ) : null}
+              {createErrors.category ? (
+                <p className="text-xs text-rose-500">{createErrors.category.join(", ")}</p>
+              ) : null}
+            </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Description</label>
               <textarea
@@ -182,21 +255,32 @@ export function MerchantProductsPage() {
                 onChange={(event) => setCreateForm((prev) => ({ ...prev, description: event.target.value }))}
                 required
               />
+              {createErrors.description ? (
+                <p className="text-xs text-rose-500">{createErrors.description.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Availability</label>
               <select
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={createForm.is_available}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, is_available: event.target.value }))}
+                value={createForm.is_available ? "true" : "false"}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, is_available: event.target.value === "true" }))
+                }
               >
                 <option value="true">Available</option>
                 <option value="false">Unavailable</option>
               </select>
+              {createErrors.is_available ? (
+                <p className="text-xs text-rose-500">{createErrors.is_available.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Image</label>
               <Input type="file" accept="image/*" onChange={(event) => setCreateImage(event.target.files?.[0] ?? null)} />
+              {createErrors.image ? (
+                <p className="text-xs text-rose-500">{createErrors.image.join(", ")}</p>
+              ) : null}
             </div>
             <div className="md:col-span-2">
               <Button type="submit">Create product</Button>
@@ -309,13 +393,54 @@ export function MerchantProductsPage() {
                   </label>
                   <Input
                     type={field.type ?? "text"}
-                    value={editForm[field.name as keyof typeof editForm]}
+                    value={String(editForm[field.name as keyof typeof editForm])}
                     onChange={(event) =>
                       setEditForm((prev) => ({ ...prev, [field.name]: event.target.value }))
                     }
                   />
+                  {editErrors[field.name] ? (
+                    <p className="text-xs text-rose-500">{editErrors[field.name].join(", ")}</p>
+                  ) : null}
                 </div>
               ))}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Category</label>
+                <select
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                  value={editForm.category}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, category: event.target.value }))}
+                  disabled={categoriesLoading || categories.length === 0}
+                >
+                  <option value="">
+                    {categoriesLoading ? "Loading categories..." : "Select category"}
+                  </option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                {categoriesError ? <p className="text-xs text-rose-500">{categoriesError}</p> : null}
+                {editErrors.category ? (
+                  <p className="text-xs text-rose-500">{editErrors.category.join(", ")}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Availability</label>
+                <select
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                  value={editForm.is_available ? "true" : "false"}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, is_available: event.target.value === "true" }))
+                  }
+                >
+                  <option value="true">Available</option>
+                  <option value="false">Unavailable</option>
+                </select>
+                {editErrors.is_available ? (
+                  <p className="text-xs text-rose-500">{editErrors.is_available.join(", ")}</p>
+                ) : null}
+              </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Description</label>
                 <textarea
@@ -324,10 +449,16 @@ export function MerchantProductsPage() {
                   value={editForm.description}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, description: event.target.value }))}
                 />
+                {editErrors.description ? (
+                  <p className="text-xs text-rose-500">{editErrors.description.join(", ")}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Image</label>
                 <Input type="file" accept="image/*" onChange={(event) => setEditImage(event.target.files?.[0] ?? null)} />
+                {editErrors.image ? (
+                  <p className="text-xs text-rose-500">{editErrors.image.join(", ")}</p>
+                ) : null}
               </div>
               <div className="md:col-span-2 flex gap-2">
                 <Button type="submit">Save changes</Button>

@@ -8,6 +8,14 @@ import { Skeleton } from "../../components/ui/skeleton"
 import { apiFetch, ApiError } from "../../lib/api"
 import { useToast } from "../../components/ui/toast"
 
+function formatApiError(error: unknown, fallback: string) {
+  if (!(error instanceof ApiError)) return fallback
+  if (!error.errors) return error.message
+  if (typeof error.errors === "string") return `${error.message}: ${error.errors}`
+  const details = Object.values(error.errors).flat().join(" ")
+  return details ? `${error.message}: ${details}` : error.message
+}
+
 export function AdminOrderDetailPage() {
   const { id } = useParams()
   const { push } = useToast()
@@ -23,7 +31,7 @@ export function AdminOrderDetailPage() {
     apiFetch(`/admin/orders/${id}`)
       .then((payload) => setOrder((payload as { data?: any }).data ?? null))
       .catch((err) => {
-        const message = err instanceof ApiError ? err.message : "Failed to load order"
+        const message = formatApiError(err, "Failed to load order")
         setError(message)
       })
       .finally(() => setLoading(false))
@@ -35,6 +43,7 @@ export function AdminOrderDetailPage() {
 
   async function handleStatusUpdate(status: string) {
     if (!id) return
+    if (order?.status === status) return
     try {
       await apiFetch(`/admin/orders/${id}/status`, {
         method: "PUT",
@@ -43,7 +52,7 @@ export function AdminOrderDetailPage() {
       push({ title: "Order updated", variant: "success" })
       loadOrder()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update order"
+      const message = formatApiError(err, "Failed to update order")
       push({ title: "Order update error", description: message, variant: "error" })
     }
   }
@@ -81,6 +90,9 @@ export function AdminOrderDetailPage() {
     )
   }
 
+  const allowedStatuses = ["pending", "processing", "completed", "cancelled"]
+  const legacyStatus = order.status && !allowedStatuses.includes(order.status) ? order.status : null
+
   return (
     <div className="space-y-6">
       <Card>
@@ -94,13 +106,19 @@ export function AdminOrderDetailPage() {
           <div>
             <select
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              defaultValue={order.status}
+              value={order.status ?? ""}
               onChange={(event) => handleStatusUpdate(event.target.value)}
             >
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              {legacyStatus ? (
+                <option value={legacyStatus} disabled>
+                  {legacyStatus}
+                </option>
+              ) : null}
+              {allowedStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
         </CardContent>

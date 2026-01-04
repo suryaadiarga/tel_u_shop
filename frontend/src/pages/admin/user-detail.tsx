@@ -8,6 +8,14 @@ import { Skeleton } from "../../components/ui/skeleton"
 import { apiFetch, ApiError } from "../../lib/api"
 import { useToast } from "../../components/ui/toast"
 
+function formatApiError(error: unknown, fallback: string) {
+  if (!(error instanceof ApiError)) return fallback
+  if (!error.errors) return error.message
+  if (typeof error.errors === "string") return `${error.message}: ${error.errors}`
+  const details = Object.values(error.errors).flat().join(" ")
+  return details ? `${error.message}: ${details}` : error.message
+}
+
 export function AdminUserDetailPage() {
   const { id } = useParams()
   const { push } = useToast()
@@ -28,7 +36,7 @@ export function AdminUserDetailPage() {
         if (data?.role?.name) setRole(data.role.name)
       })
       .catch((err) => {
-        const message = err instanceof ApiError ? err.message : "Failed to load user"
+        const message = formatApiError(err, "Failed to load user")
         setError(message)
       })
       .finally(() => setLoading(false))
@@ -48,7 +56,7 @@ export function AdminUserDetailPage() {
       push({ title: "Role updated", variant: "success" })
       loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to update role"
+      const message = formatApiError(err, "Failed to update role")
       push({ title: "Role update error", description: message, variant: "error" })
     }
   }
@@ -60,7 +68,7 @@ export function AdminUserDetailPage() {
       push({ title: "Merchant approved", variant: "success" })
       loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to approve merchant"
+      const message = formatApiError(err, "Failed to approve merchant")
       push({ title: "Approval error", description: message, variant: "error" })
     }
   }
@@ -72,7 +80,7 @@ export function AdminUserDetailPage() {
       push({ title: "User banned", variant: "success" })
       loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to ban user"
+      const message = formatApiError(err, "Failed to ban user")
       push({ title: "Ban error", description: message, variant: "error" })
     }
   }
@@ -84,7 +92,7 @@ export function AdminUserDetailPage() {
       push({ title: "User unbanned", variant: "success" })
       loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to unban user"
+      const message = formatApiError(err, "Failed to unban user")
       push({ title: "Unban error", description: message, variant: "error" })
     }
   }
@@ -93,9 +101,10 @@ export function AdminUserDetailPage() {
     if (!id) return
     try {
       await apiFetch(`/admin/users/${id}/activate`, { method: "PUT" })
-      push({ title: "User activated", description: "Note: backend does not persist this state.", variant: "success" })
+      push({ title: "User activated", variant: "success" })
+      loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to activate user"
+      const message = formatApiError(err, "Failed to activate user")
       push({ title: "Activate error", description: message, variant: "error" })
     }
   }
@@ -104,9 +113,10 @@ export function AdminUserDetailPage() {
     if (!id) return
     try {
       await apiFetch(`/admin/users/${id}/deactivate`, { method: "PUT" })
-      push({ title: "User deactivated", description: "Note: backend does not persist this state.", variant: "success" })
+      push({ title: "User deactivated", variant: "success" })
+      loadUser()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to deactivate user"
+      const message = formatApiError(err, "Failed to deactivate user")
       push({ title: "Deactivate error", description: message, variant: "error" })
     }
   }
@@ -185,10 +195,10 @@ export function AdminUserDetailPage() {
                     Ban
                   </Button>
                 )}
-                <Button variant="outline" onClick={handleActivate}>
+                <Button variant="outline" onClick={handleActivate} disabled={!user.is_banned}>
                   Activate
                 </Button>
-                <Button variant="outline" onClick={handleDeactivate}>
+                <Button variant="outline" onClick={handleDeactivate} disabled={user.is_banned}>
                   Deactivate
                 </Button>
               </div>

@@ -46,6 +46,7 @@ export function CustomerWalletPage() {
   const [transactions, setTransactions] = React.useState<Paginator<WalletTransaction> | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({})
   const [topupAmount, setTopupAmount] = React.useState("")
   const [filters, setFilters] = React.useState({ type: "", page: 1 })
 
@@ -73,6 +74,7 @@ export function CustomerWalletPage() {
   }, [loadTransactions])
 
   async function handleTopup() {
+    setFieldErrors({})
     try {
       await apiFetch("/wallet/topup", {
         method: "POST",
@@ -84,8 +86,14 @@ export function CustomerWalletPage() {
       setTopupAmount("")
       loadTransactions()
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Topup failed"
-      push({ title: "Topup error", description: message, variant: "error" })
+      if (err instanceof ApiError) {
+        push({ title: "Topup error", description: err.message, variant: "error" })
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setFieldErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        push({ title: "Topup error", description: "Topup failed", variant: "error" })
+      }
     }
   }
 
@@ -108,6 +116,9 @@ export function CustomerWalletPage() {
               onChange={(event) => setTopupAmount(event.target.value)}
               className="w-40"
             />
+            {fieldErrors.amount ? (
+              <p className="text-xs text-rose-500">{fieldErrors.amount.join(", ")}</p>
+            ) : null}
             <Button onClick={handleTopup} disabled={!topupAmount}>
               Top up
             </Button>

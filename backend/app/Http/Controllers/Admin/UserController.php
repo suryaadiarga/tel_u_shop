@@ -128,10 +128,11 @@ class UserController extends Controller
                 ], 400);
             }
 
-            // Mark user as inactive using a status field or similar
-            // For now, we'll use update with a deleted_at or is_active field
-            // Since migration doesn't have this, we'll skip this for now
-            // But you should add: $table->boolean('is_active')->default(true); to users table
+            // Reuse the existing banned flags to represent deactivation.
+            $user->update([
+                'is_banned' => true,
+                'banned_at' => now(),
+            ]);
 
             return response()->json([
                 'status' => 'success',
@@ -155,7 +156,11 @@ class UserController extends Controller
         try {
             $user = User::findOrFail($id);
 
-            // Activate user
+            $user->update([
+                'is_banned' => false,
+                'banned_at' => null,
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'User berhasil diaktifkan kembali.',

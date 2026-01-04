@@ -13,12 +13,14 @@ export function LoginPage() {
   const { login } = useAuth()
   const { push } = useToast()
   const [error, setError] = React.useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({})
   const [busy, setBusy] = React.useState(false)
   const [form, setForm] = React.useState({ email: "", password: "" })
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
+    setFieldErrors({})
     setBusy(true)
 
     try {
@@ -26,8 +28,14 @@ export function LoginPage() {
       push({ title: "Welcome back", description: "Login successful", variant: "success" })
       navigate("/app")
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Login failed"
-      setError(message)
+      if (err instanceof ApiError) {
+        setError(err.message)
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setFieldErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        setError("Login failed")
+      }
     } finally {
       setBusy(false)
     }
@@ -60,6 +68,9 @@ export function LoginPage() {
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
                 required
               />
+              {fieldErrors.email ? (
+                <p className="text-xs text-rose-500">{fieldErrors.email.join(", ")}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -71,6 +82,9 @@ export function LoginPage() {
                 onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
                 required
               />
+              {fieldErrors.password ? (
+                <p className="text-xs text-rose-500">{fieldErrors.password.join(", ")}</p>
+              ) : null}
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? "Signing in..." : "Login"}

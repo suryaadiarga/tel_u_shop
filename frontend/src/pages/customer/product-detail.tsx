@@ -1,4 +1,4 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { Link, useParams } from "react-router-dom"
 import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
@@ -44,10 +44,24 @@ export function CustomerProductDetailPage() {
   const { push } = useToast()
   const [product, setProduct] = React.useState<Product | null>(null)
   const [reviews, setReviews] = React.useState<Paginator<Review> | null>(null)
+  const [reviewErrors, setReviewErrors] = React.useState<Record<string, string[]>>({})
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [qty, setQty] = React.useState(1)
   const [reviewForm, setReviewForm] = React.useState({ rating: "5", comment: "" })
+  const [cartSummary, setCartSummary] = React.useState<{ count: number; total: number } | null>(null)
+
+  const refreshCartSummary = React.useCallback(async () => {
+    try {
+      const cartPayload = await apiFetch("/cart")
+      const cartData = (cartPayload as { data?: { items?: Array<unknown>; total?: number } }).data
+      const count = cartData?.items?.length ?? 0
+      const total = cartData?.total ?? 0
+      setCartSummary({ count, total })
+    } catch {
+      setCartSummary(null)
+    }
+  }, [])
 
   React.useEffect(() => {
     if (!id) return
@@ -61,6 +75,7 @@ export function CustomerProductDetailPage() {
       .then(([productPayload, reviewsPayload]) => {
         setProduct((productPayload as { data?: Product }).data ?? null)
         setReviews((reviewsPayload as { data?: Paginator<Review> }).data ?? null)
+        refreshCartSummary()
       })
       .catch((err) => {
         const message = err instanceof ApiError ? err.message : "Failed to load product"
@@ -74,6 +89,7 @@ export function CustomerProductDetailPage() {
     try {
       await apiFetch(`/cart/add/${id}`, { method: "POST", body: { qty } })
       push({ title: "Added to cart", variant: "success" })
+      refreshCartSummary()
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Failed to add to cart"
       push({ title: "Cart error", description: message, variant: "error" })
@@ -83,6 +99,7 @@ export function CustomerProductDetailPage() {
   async function handleReviewSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!id) return
+    setReviewErrors({})
     try {
       await apiFetch(`/products/${id}/reviews`, {
         method: "POST",
@@ -96,8 +113,14 @@ export function CustomerProductDetailPage() {
       setReviews((updated as { data?: Paginator<Review> }).data ?? null)
       setReviewForm({ rating: "5", comment: "" })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to submit review"
-      push({ title: "Review error", description: message, variant: "error" })
+      if (err instanceof ApiError) {
+        push({ title: "Review error", description: err.message, variant: "error" })
+        if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+          setReviewErrors(err.errors as Record<string, string[]>)
+        }
+      } else {
+        push({ title: "Review error", description: "Failed to submit review", variant: "error" })
+      }
     }
   }
 
@@ -173,6 +196,11 @@ export function CustomerProductDetailPage() {
                 className="w-24"
               />
               <Button onClick={handleAddToCart}>Add to cart</Button>
+              {cartSummary ? (
+                <span className="text-xs text-slate-500">
+                  In cart: {cartSummary.count} items | Total {cartSummary.total}
+                </span>
+              ) : null}
             </div>
           </div>
         </CardContent>
@@ -201,6 +229,12 @@ export function CustomerProductDetailPage() {
             <Button type="submit" variant="secondary">
               Submit
             </Button>
+            {reviewErrors.rating ? (
+              <p className="text-xs text-rose-500 sm:col-span-3">{reviewErrors.rating.join(", ")}</p>
+            ) : null}
+            {reviewErrors.comment ? (
+              <p className="text-xs text-rose-500 sm:col-span-3">{reviewErrors.comment.join(", ")}</p>
+            ) : null}
           </form>
 
           <div className="space-y-3">
@@ -223,3 +257,4 @@ export function CustomerProductDetailPage() {
     </div>
   )
 }
+

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Services\QueryService;
 
@@ -69,9 +70,24 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,completed,cancelled'
         ]);
 
+        $previousStatus = $order->status;
         $order->update([
             'status' => $request->input('status')
         ]);
+
+        if ($previousStatus !== $order->status) {
+            Notification::create([
+                'user_id' => $order->user_id,
+                'type' => 'order_status',
+                'title' => 'Status Pesanan Diperbarui',
+                'message' => "Status pesanan #{$order->id} berubah dari {$previousStatus} ke {$order->status}.",
+                'data' => [
+                    'order_id' => $order->id,
+                    'from' => $previousStatus,
+                    'to' => $order->status,
+                ],
+            ]);
+        }
 
         return response()->json([
             'status' => 'success',
