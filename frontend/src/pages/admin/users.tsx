@@ -10,12 +10,14 @@ import { EmptyState } from "../../components/ui/empty-state"
 import { TablePagination } from "../../components/ui/table"
 import { apiFetch, ApiError } from "../../lib/api"
 import { buildQuery } from "../../lib/query"
+import { useToast } from "../../components/ui/toast"
 
 type User = {
   id: number
   name: string
   email: string
-  role?: { name: string }
+  role?: { id?: number; name: string }
+  role_id?: number | string
   merchant_status?: string | null
   is_banned?: boolean
 }
@@ -28,6 +30,7 @@ type Paginator<T> = {
 }
 
 export function AdminUsersPage() {
+  const { push } = useToast()
   const [users, setUsers] = React.useState<Paginator<User> | null>(null)
   const [filters, setFilters] = React.useState({
     role: "",
@@ -38,8 +41,10 @@ export function AdminUsersPage() {
   })
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
+  const isMerchantUser = (user: User) =>
+    user.role?.name === "merchant" || Number(user.role_id) === 2 || Number(user.role?.id) === 2
 
-  React.useEffect(() => {
+  const loadUsers = React.useCallback(() => {
     setError(null)
     setLoading(true)
 
@@ -51,6 +56,21 @@ export function AdminUsersPage() {
       })
       .finally(() => setLoading(false))
   }, [filters])
+
+  React.useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
+
+  async function handleApprove(userId: number) {
+    try {
+      await apiFetch(`/admin/merchants/${userId}/approve`, { method: "PUT" })
+      push({ title: "Merchant approved", variant: "success" })
+      loadUsers()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Failed to approve merchant"
+      push({ title: "Approval error", description: message, variant: "error" })
+    }
+  }
 
   const hasUsers = (users?.data?.length ?? 0) > 0
 
@@ -127,8 +147,15 @@ export function AdminUsersPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge variant="outline">{user.role?.name ?? ""}</Badge>
-                  {user.merchant_status ? <Badge variant="soft">{user.merchant_status}</Badge> : null}
+                  {isMerchantUser(user) && user.merchant_status ? (
+                    <Badge variant="soft">{user.merchant_status}</Badge>
+                  ) : null}
                   {user.is_banned ? <Badge variant="outline">Banned</Badge> : null}
+                  {isMerchantUser(user) && user.merchant_status !== "approved" ? (
+                    <Button variant="secondary" onClick={() => handleApprove(user.id)}>
+                      Approve merchant
+                    </Button>
+                  ) : null}
                   <Button variant="outline" asChild>
                     <Link to={`/app/admin/users/${user.id}`}>View</Link>
                   </Button>

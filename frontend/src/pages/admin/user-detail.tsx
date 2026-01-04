@@ -23,6 +23,8 @@ export function AdminUserDetailPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [role, setRole] = React.useState("customer")
   const [loading, setLoading] = React.useState(true)
+  const isMerchantUser = (data: any) =>
+    data?.role?.name === "merchant" || Number(data?.role_id) === 2 || Number(data?.role?.id) === 2
 
   const loadUser = React.useCallback(() => {
     if (!id) return
@@ -159,7 +161,9 @@ export function AdminUserDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{user.role?.name ?? ""}</Badge>
-              {user.merchant_status ? <Badge variant="soft">{user.merchant_status}</Badge> : null}
+              {isMerchantUser(user) && user.merchant_status ? (
+                <Badge variant="soft">{user.merchant_status}</Badge>
+              ) : null}
               {user.is_banned ? <Badge variant="outline">Banned</Badge> : null}
             </div>
           </div>
@@ -183,7 +187,7 @@ export function AdminUserDetailPage() {
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Actions</label>
               <div className="flex flex-wrap gap-2">
-                {user.role?.name === "merchant" && user.merchant_status !== "approved" ? (
+                {isMerchantUser(user) && user.merchant_status !== "approved" ? (
                   <Button onClick={handleApproveMerchant}>Approve merchant</Button>
                 ) : null}
                 {user.is_banned ? (

@@ -119,22 +119,22 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role?->name === self::ROLE_ADMIN;
+        return $this->resolveRoleName() === self::ROLE_ADMIN;
     }
 
     public function isMerchant(): bool
     {
-        return $this->role?->name === self::ROLE_MERCHANT;
+        return $this->resolveRoleName() === self::ROLE_MERCHANT;
     }
 
     public function isCustomer(): bool
     {
-        return $this->role?->name === self::ROLE_CUSTOMER;
+        return $this->resolveRoleName() === self::ROLE_CUSTOMER;
     }
 
     public function hasRole(string $role): bool
     {
-        return $this->role?->name === $role;
+        return $this->resolveRoleName() === $role;
     }
 
     public function isBanned(): bool
@@ -145,5 +145,27 @@ class User extends Authenticatable
     public function isMerchantApproved(): bool
     {
         return $this->isMerchant() && $this->merchant_status === 'approved';
+    }
+
+    private function resolveRoleName(): ?string
+    {
+        if ($this->role?->name) {
+            return $this->role->name;
+        }
+
+        if (!$this->role_id) {
+            return null;
+        }
+
+        switch ((int) $this->role_id) {
+            case 1:
+                return self::ROLE_ADMIN;
+            case 2:
+                return self::ROLE_MERCHANT;
+            case 3:
+                return self::ROLE_CUSTOMER;
+            default:
+                return null;
+        }
     }
 }
