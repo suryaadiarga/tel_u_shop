@@ -12,20 +12,24 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Makanan',
-            'Minuman',
+            'Makanan & Minuman',
+            'Sembako',
             'Elektronik',
-            'Fashion',
+            'Handphone & Aksesoris',
+            'Fashion Pria',
+            'Fashion Wanita',
             'Kecantikan',
             'Kesehatan',
             'Rumah Tangga',
-            'Buku',
+            'Peralatan Dapur',
+            'Buku & Alat Tulis',
             'Olahraga',
             'Otomotif',
-            'Hobi',
+            'Hobi & Koleksi',
             'Bayi & Anak',
             'Perlengkapan Hewan',
-            'Sembako',
+            'Perlengkapan Ibadah',
+            'Pulsa & Tagihan',
         ];
 
         $categoryMap = [];

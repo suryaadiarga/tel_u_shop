@@ -11,19 +11,28 @@ class UserSeeder extends Seeder
     public function run()
     {
         User::updateOrCreate(
-            ['email' => 'admin@koperasi.test'],
+            ['email' => 'surya@admin.test'],
             [
-                'name' => 'Admin Koperasi',
-                'password' => Hash::make('password'),
+                'name' => 'Surya Admin',
+                'password' => Hash::make('12345678'),
                 'role_id' => 1,
             ]
         );
 
         User::updateOrCreate(
-            ['email' => 'merchant@koperasi.test'],
+            ['email' => 'rahmadrafi@admin.test'],
             [
-                'name' => 'Merchant A',
-                'password' => Hash::make('password'),
+                'name' => 'Rahmad Rafi Admin',
+                'password' => Hash::make('12345678'),
+                'role_id' => 1,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'galang@merchant.test'],
+            [
+                'name' => 'Galang Merchant',
+                'password' => Hash::make('12345678'),
                 'role_id' => 2,
                 'merchant_status' => 'approved',
                 'is_banned' => false,
@@ -31,20 +40,43 @@ class UserSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'customer@koperasi.test'],
+            ['email' => 'faruq@merchant.test'],
             [
-                'name' => 'Customer A',
-                'password' => Hash::make('password'),
+                'name' => 'Faruq Merchant',
+                'password' => Hash::make('12345678'),
+                'role_id' => 2,
+                'merchant_status' => 'approved',
+                'is_banned' => false,
+            ]
+        );
+
+
+        User::updateOrCreate(
+            ['email' => 'rahmadrafi@customer.test'],
+            [
+                'name' => 'Rahmad Rafi Customer',
+                'password' => Hash::make('12345678'),
                 'role_id' => 3,
             ]
         );
 
         User::updateOrCreate(
-            ['email' => 'suryaadiarga@student.telkomuniversity.ac.id'],
+            ['email' => 'mutiara_nl@customer.test'],
             [
-                'name' => 'Surya Adiarga',
-                'password' => Hash::make('12345'),
-                'role_id' => 1,
+                'name' => 'Mutiara NL Customer',
+                'password' => Hash::make('12345678'),
+                'role_id' => 3,
+                'wallet_balance' => 500000,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'devina_putri@customer.test'],
+            [
+                'name' => 'Devina Putri Customer',
+                'password' => Hash::make('12345678'),
+                'role_id' => 3,
+                'wallet_balance' => 300000,
             ]
         );
     }

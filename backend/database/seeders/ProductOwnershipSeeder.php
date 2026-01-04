@@ -10,13 +10,46 @@ class ProductOwnershipSeeder extends Seeder
 {
     public function run(): void
     {
-        $merchant = User::where('email', 'merchant@koperasi.test')->first();
+        $preferredEmails = [
+            'galang@merchant.test',
+            'faruq@merchant.test',
+        ];
+        $merchants = User::whereIn('email', $preferredEmails)
+            ->orderBy('id')
+            ->get(['id']);
 
-        if (!$merchant) {
+        if ($merchants->isEmpty()) {
+            $merchants = User::where('role_id', 2)
+                ->where('merchant_status', 'approved')
+                ->where('is_banned', false)
+                ->orderBy('id')
+                ->get(['id']);
+        }
+
+        if ($merchants->isEmpty()) {
+            $merchants = User::where('role_id', 2)->orderBy('id')->get(['id']);
+        }
+
+        if ($merchants->isEmpty()) {
             return;
         }
 
-        Product::whereNull('merchant_id')->update(['merchant_id' => $merchant->id]);
-        Product::whereNull('user_id')->update(['user_id' => $merchant->id]);
+        $merchantIds = $merchants->pluck('id')->values();
+        $merchantCount = $merchantIds->count();
+
+        $offset = 0;
+        Product::orderBy('id')
+            ->chunkById(200, function ($products) use ($merchantIds, $merchantCount, &$offset) {
+                $index = 0;
+                foreach ($products as $product) {
+                    $merchantId = $merchantIds[($offset + $index) % $merchantCount];
+                    $product->update([
+                        'merchant_id' => $merchantId,
+                        'user_id' => $merchantId,
+                    ]);
+                    $index++;
+                }
+                $offset += $products->count();
+            });
     }
 }
