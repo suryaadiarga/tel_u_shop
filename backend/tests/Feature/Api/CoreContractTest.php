@@ -15,7 +15,7 @@ class CoreContractTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function seedRoles(): array
+    protected function seedRoles(): array
     {
         return [
             'admin' => Role::firstOrCreate(['name' => 'admin'], ['display_name' => 'Admin']),

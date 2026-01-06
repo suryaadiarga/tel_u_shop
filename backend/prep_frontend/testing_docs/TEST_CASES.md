@@ -1,0 +1,111 @@
+# Test Cases
+
+## Auth
+- ID: U-AUTH-POS-001
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testIsBannedPositive`.
+  - Expected Result: `User::isBanned()` returns false for `is_banned=false`.
+  - Evidence: Terminal shows PASS for `AuthUnitTest::testIsBannedPositive`.
+- ID: U-AUTH-NEG-002
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testIsBannedNegative`.
+  - Expected Result: `User::isBanned()` returns true for `is_banned=true`.
+  - Evidence: Terminal shows PASS for `AuthUnitTest::testIsBannedNegative`.
+- ID: I-AUTH-POS-001
+  - Precondition: Roles seeded; customer user exists with known password.
+  - Steps: POST `/api/login` with valid email/password.
+  - Expected Result: 200 OK, `success=true`, token present.
+  - Evidence: Terminal shows PASS for `AuthFeatureTest::testLoginPositive`.
+- ID: I-AUTH-NEG-002
+  - Precondition: Roles seeded; customer user exists.
+  - Steps: POST `/api/login` with wrong password.
+  - Expected Result: 401 Unauthorized, `success=false`.
+  - Evidence: Terminal shows PASS for `AuthFeatureTest::testLoginNegative`.
+
+## CustomerProducts
+- ID: U-CUSTOMERPRODUCTS-POS-001
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testStockStatusPositive`.
+  - Expected Result: Stock > 0 returns `Tersedia`.
+  - Evidence: Terminal shows PASS for `CustomerProductsUnitTest::testStockStatusPositive`.
+- ID: U-CUSTOMERPRODUCTS-NEG-002
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testStockStatusNegative`.
+  - Expected Result: Stock = 0 returns `Habis`.
+  - Evidence: Terminal shows PASS for `CustomerProductsUnitTest::testStockStatusNegative`.
+- ID: I-CUSTOMERPRODUCTS-POS-001
+  - Precondition: Customer user; approved merchant; available product with stock.
+  - Steps: GET `/api/products`.
+  - Expected Result: 200 OK, `success=true`, product listed.
+  - Evidence: Terminal shows PASS for `CustomerProductsFeatureTest::testProductIndexPositive`.
+- ID: I-CUSTOMERPRODUCTS-NEG-002
+  - Precondition: Customer user; product exists but unavailable.
+  - Steps: GET `/api/products/{id}` for unavailable product.
+  - Expected Result: 404 Not Found, `success=false`.
+  - Evidence: Terminal shows PASS for `CustomerProductsFeatureTest::testProductShowNegative`.
+
+## Wallet
+- ID: U-WALLET-POS-001
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testPerPagePositive`.
+  - Expected Result: `per_page=5` returns 5.
+  - Evidence: Terminal shows PASS for `WalletUnitTest::testPerPagePositive`.
+- ID: U-WALLET-NEG-002
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testPerPageNegative`.
+  - Expected Result: `per_page=0` falls back to default (20).
+  - Evidence: Terminal shows PASS for `WalletUnitTest::testPerPageNegative`.
+- ID: I-WALLET-POS-001
+  - Precondition: Customer user authenticated.
+  - Steps: POST `/api/wallet/topup` with amount >= 1000.
+  - Expected Result: 200 OK, `success=true`, wallet balance increases.
+  - Evidence: Terminal shows PASS for `WalletFeatureTest::testTopupPositive`.
+- ID: I-WALLET-NEG-002
+  - Precondition: Customer user authenticated.
+  - Steps: POST `/api/wallet/topup` with amount < 1000.
+  - Expected Result: 422 Unprocessable Entity, `success=false`.
+  - Evidence: Terminal shows PASS for `WalletFeatureTest::testTopupNegative`.
+
+## MerchantProducts
+- ID: U-MERCHANTPRODUCTS-POS-001
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testMerchantApprovalPositive`.
+  - Expected Result: Approved merchant returns true for `isMerchantApproved()`.
+  - Evidence: Terminal shows PASS for `MerchantProductsUnitTest::testMerchantApprovalPositive`.
+- ID: U-MERCHANTPRODUCTS-NEG-002
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testMerchantApprovalNegative`.
+  - Expected Result: Pending merchant returns false for `isMerchantApproved()`.
+  - Evidence: Terminal shows PASS for `MerchantProductsUnitTest::testMerchantApprovalNegative`.
+- ID: I-MERCHANTPRODUCTS-POS-001
+  - Precondition: Approved merchant authenticated.
+  - Steps: POST `/api/merchant/products` with valid payload.
+  - Expected Result: 201 Created, `success=true`.
+  - Evidence: Terminal shows PASS for `MerchantProductsFeatureTest::testCreateProductPositive`.
+- ID: I-MERCHANTPRODUCTS-NEG-002
+  - Precondition: Merchant authenticated with `merchant_status=pending`.
+  - Steps: POST `/api/merchant/products` with valid payload.
+  - Expected Result: 403 Forbidden, `success=false`.
+  - Evidence: Terminal shows PASS for `MerchantProductsFeatureTest::testCreateProductNegative`.
+
+## AdminUsers
+- ID: U-ADMINUSERS-POS-001
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testHasRolePositive`.
+  - Expected Result: Admin user returns true for `hasRole('admin')`.
+  - Evidence: Terminal shows PASS for `AdminUsersUnitTest::testHasRolePositive`.
+- ID: U-ADMINUSERS-NEG-002
+  - Precondition: None (unit test, no DB).
+  - Steps: Execute `testHasRoleNegative`.
+  - Expected Result: Customer user returns false for `hasRole('admin')`.
+  - Evidence: Terminal shows PASS for `AdminUsersUnitTest::testHasRoleNegative`.
+- ID: I-ADMINUSERS-POS-001
+  - Precondition: Admin authenticated.
+  - Steps: GET `/api/admin/users`.
+  - Expected Result: 200 OK, `success=true`.
+  - Evidence: Terminal shows PASS for `AdminUsersFeatureTest::testAdminIndexPositive`.
+- ID: I-ADMINUSERS-NEG-002
+  - Precondition: Customer authenticated.
+  - Steps: GET `/api/admin/users`.
+  - Expected Result: 403 Forbidden, `success=false`.
+  - Evidence: Terminal shows PASS for `AdminUsersFeatureTest::testAdminIndexNegative`.
