@@ -66,14 +66,14 @@ class UserSeeder extends Seeder
                 'name' => 'Mutiara NL Customer',
                 'password' => Hash::make('12345678'),
                 'role_id' => 3,
-                'wallet_balance' => 500000,
+                'wallet_balance' => 2000000,
             ]
         );
 
         User::updateOrCreate(
-            ['email' => 'devina_putri@customer.test'],
+            ['email' => 'faiqotul_faridah@customer.test'],
             [
-                'name' => 'Devina Putri Customer',
+                'name' => 'Faiqotul Faridah Customer',
                 'password' => Hash::make('12345678'),
                 'role_id' => 3,
                 'wallet_balance' => 300000,
